@@ -157,6 +157,7 @@ You can run Aspire from either way - file-based `apphost.cs` or project-based `A
 - [Multi-Agent Orchestration Pattern](https://learn.microsoft.com/agent-framework/user-guide/workflows/orchestrations/overview)
 - [AG-UI Protocol](https://docs.ag-ui.com/introduction)
 - [MarkItDown MCP Server](https://github.com/microsoft/markitdown/tree/main/packages/markitdown-mcp)
-- [Outlook Email MCP Server](https://github.com/microsoft/mcp-dotnet-samples/tree/main/outlook-email)
+- [Aspire](https://aspire.dev)
+<!-- - [Outlook Email MCP Server](https://github.com/microsoft/mcp-dotnet-samples/tree/main/outlook-email)
 - [OneDrive Download MCP Server](https://github.com/microsoft/mcp-dotnet-samples/tree/main/onedrive-download)
-- [Google Drive Download MCP Server](https://github.com/microsoft/mcp-dotnet-samples/tree/main/googledrive-download)
+- [Google Drive Download MCP Server](https://github.com/microsoft/mcp-dotnet-samples/tree/main/googledrive-download) -->
