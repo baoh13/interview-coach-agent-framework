@@ -135,6 +135,7 @@ public static class AgentDelegateFactory
     // Prerequisites:
     //   - GitHub Copilot CLI installed: https://github.com/github/copilot-sdk
     //   - Authenticated via: gh auth login
+    //   - or using a GitHub Token, defined as a secret (see repo documentation)
     //   - NuGet package: Microsoft.Agents.AI.GitHub.Copilot
     // ============================================================================
     private static Workflow CreateCopilotHandOffWorkflow(IServiceProvider sp, string key)
