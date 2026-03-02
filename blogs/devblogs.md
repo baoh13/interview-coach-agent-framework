@@ -1,8 +1,8 @@
-# Build an AI Interview Coach with Microsoft Agent Framework, MCP, and Aspire
+# Build a real-world example with Microsoft Agent Framework, Microsoft Foundry, MCP and Aspire
 
 Building AI agents is getting easier. Deploying them as part of a real application, with multiple services, persistent state, and production infrastructure, is where things get complicated.
 
-We built an open-source Interview Coach sample to show how [Microsoft Agent Framework](https://aka.ms/agent-framework), [Microsoft Foundry](https://learn.microsoft.com/azure/foundry/what-is-foundry), [Model Context Protocol (MCP)](https://modelcontextprotocol.io/), and [Aspire](https://aspire.dev) fit together in a production-style application. It's a working interview simulator where an AI coach walks you through behavioral and technical questions, then delivers a summary of your performance.
+We hear you! We built an open-source Interview Coach sample to show how [Microsoft Agent Framework](https://aka.ms/agent-framework), [Microsoft Foundry](https://learn.microsoft.com/azure/foundry/what-is-foundry), [Model Context Protocol (MCP)](https://modelcontextprotocol.io/), and [Aspire](https://aspire.dev) fit together in a production-style application. It's a working interview simulator where an AI coach walks you through behavioral and technical questions, then delivers a summary of your performance.
 
 This post covers the patterns we used and the problems they solve.
 
