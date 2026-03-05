@@ -96,6 +96,8 @@ Under the hood, the Aspire app host uses a provider factory that wires up the ri
 
 ## Pattern 1: Multi-agent handoff
 
+<!-- ./videos/interview-coach-agent-handoff-pattern.mp4 -->
+
 The handoff pattern is where this sample gets interesting. Instead of one agent doing everything, the interview is split across five specialized agents:
 
 | Agent | Role | Tools |
