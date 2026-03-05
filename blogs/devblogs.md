@@ -1,8 +1,8 @@
 # Build a real-world example with Microsoft Agent Framework, Microsoft Foundry, MCP and Aspire
 
-Building AI agents is getting easier. Deploying them as part of a real application, with multiple services, persistent state, and production infrastructure, is where things get complicated.
+Building AI agents is getting easier. Deploying them as part of a real application, with multiple services, persistent state, and production infrastructure, is where things get complicated. Developers from the .NET community have requested whether a real-world example that shows running on local machine as well as on the cloud in a cloud-native way.
 
-We hear you! We built an open-source Interview Coach sample to show how [Microsoft Agent Framework](https://aka.ms/agent-framework), [Microsoft Foundry](https://learn.microsoft.com/azure/foundry/what-is-foundry), [Model Context Protocol (MCP)](https://modelcontextprotocol.io/), and [Aspire](https://aspire.dev) fit together in a production-style application. It's a working interview simulator where an AI coach walks you through behavioral and technical questions, then delivers a summary of your performance.
+We've heard you! We built an open-source Interview Coach sample to show how [Microsoft Agent Framework](https://aka.ms/agent-framework), [Microsoft Foundry](https://learn.microsoft.com/azure/foundry/what-is-foundry), [Model Context Protocol (MCP)](https://modelcontextprotocol.io/), and [Aspire](https://aspire.dev) fit together in a production-style application. It's a working interview simulator where an AI coach walks you through behavioral and technical questions, then delivers a summary of your performance.
 
 This post covers the patterns we used and the problems they solve.
 
@@ -17,7 +17,7 @@ It takes AutoGen's agent abstractions and Semantic Kernel's enterprise features 
 For .NET developers, this means:
 
 - **One framework instead of two.** No more choosing between Semantic Kernel and AutoGen.
-- **Familiar patterns.** Agents use dependency injection, `IChatClient`, and the same hosting model as ASP.NET apps.
+- **Familiar patterns.** Agents use dependency injection, [`IChatClient`](https://learn.microsoft.com/dotnet/ai/ichatclient), and the same hosting model as ASP.NET apps.
 - **Built for production.** OpenTelemetry, middleware pipelines, and Aspire integration are included.
 - **Multi-agent orchestration.** Sequential workflows, concurrent execution, handoff patterns, and group chat are all supported.
 
@@ -48,7 +48,7 @@ The Interview Coach is a conversational AI that runs a mock job interview. You p
 3. **Technical interview.** Asks role-specific technical questions.
 4. **Summary.** Generates a performance review with specific feedback.
 
-You interact with it through a Blazor web UI that streams responses in real time.
+You interact with it through a [Blazor](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor) web UI that streams responses in real time.
 
 ## Architecture at a glance
 
@@ -158,7 +158,8 @@ For deployment, `azd up` pushes the entire application to Azure Container Apps.
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later
 - [Azure Subscription](https://azure.microsoft.com/free)
-- [Microsoft Foundry](https://ai.azure.com) project (or use [GitHub Models](https://github.com/marketplace/models) for free prototyping)
+- [Microsoft Foundry](https://ai.azure.com) project
+- [Docker Desktop](https://docs.docker.com/desktop/) or other container runtime
 
 ### Run it locally
 
@@ -193,7 +194,7 @@ azd auth login
 azd up
 ```
 
-That's it. Aspire and `azd` handle the rest. Once you complete, you can safely delete all the resources by running:
+That's it. Aspire and `azd` handle the rest. Once you complete deployment and testing, you can safely delete all the resources by running:
 
 ```bash
 azd down --force --purge
@@ -221,7 +222,7 @@ If you build something with these patterns, [open an issue](https://github.com/A
 
 ## What's next?
 
-We're working on more integrations: [Microsoft Foundry Agent Service](https://learn.microsoft.com/agent-framework/agents/providers/azure-ai-foundry?pivots=programming-language-csharp), [GitHub Copilot](https://learn.microsoft.com/agent-framework/agents/providers/github-copilot?pivots=programming-language-csharp), and [A2A](https://learn.microsoft.com/en-us/agent-framework/integrations/a2a?pivots=programming-language-csharp). We'll update the sample as they ship.
+We're working on more integration scenarios: [Microsoft Foundry Agent Service](https://learn.microsoft.com/agent-framework/agents/providers/azure-ai-foundry?pivots=programming-language-csharp), [GitHub Copilot](https://learn.microsoft.com/agent-framework/agents/providers/github-copilot?pivots=programming-language-csharp), and [A2A](https://learn.microsoft.com/en-us/agent-framework/integrations/a2a?pivots=programming-language-csharp) and ore. We'll update the sample as they ship.
 
 ## Resources
 
@@ -231,5 +232,7 @@ We're working on more integrations: [Microsoft Foundry Agent Service](https://le
 - [Microsoft Foundry documentation](https://learn.microsoft.com/azure/foundry/what-is-foundry)
 - [Microsoft Foundry Agent Service](https://learn.microsoft.com/en-us/azure/foundry/agents/overview)
 - [Microsoft Foundry Portal](https://ai.azure.com)
+- [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai)
 - [Model Context Protocol specification](https://modelcontextprotocol.io)
 - [Aspire documentation](https://aspire.dev)
+- [ASP.NET Blazor](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor)
