@@ -492,3 +492,7 @@ src/InterviewCoach.AppHost/appsettings.Development.json
 .squad/sessions/
 # Squad: SubSquad activation file (local to this machine)
 .squad-workstream
+
+*\wwwroot\*
+/src/InterviewCoach.WebUI/wwwroot/app.css
+/src/InterviewCoach.WebUI/wwwroot/app.js
