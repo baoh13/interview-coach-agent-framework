@@ -1,0 +1,43 @@
+{
+  "bands": [
+    {
+      "label": "AI & Machine Learning",
+      "technologies": [
+        "Azure OpenAI",
+        "Semantic Kernel",
+        "GitHub Copilot",
+        "LangChain",
+        "Generative AI"
+      ]
+    },
+    {
+      "label": "Cloud & Infrastructure",
+      "technologies": [
+        "Azure",
+        "Azure Container Apps",
+        "Azure Functions",
+        "GitHub Actions",
+        ".NET Aspire"
+      ]
+    },
+    {
+      "label": "Backend",
+      "technologies": [
+        "C# / .NET",
+        "ASP.NET Core",
+        "Entity Framework Core",
+        "MCP (Model Context Protocol)",
+        "REST APIs"
+      ]
+    },
+    {
+      "label": "Frontend",
+      "technologies": [
+        "Blazor",
+        "HTML / CSS",
+        "JavaScript",
+        "Tailwind CSS"
+      ]
+    }
+  ]
+}

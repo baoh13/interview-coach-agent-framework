@@ -9,5 +9,37 @@
     "Website Support and Maintenance",
     "MVP Development"
   ],
-  "detailOrQuote": "Passionate about leveraging cutting-edge technologies like Generative AI and cloud platforms to solve business problems. Our focus is on delivering innovative, scalable, and efficient solutions that drive business success."
+  "detailOrQuote": "Passionate about leveraging cutting-edge technologies like Generative AI and cloud platforms to solve business problems. Our focus is on delivering innovative, scalable, and efficient solutions that drive business success.",
+  "cards": [
+    {
+      "icon": "⚙️",
+      "name": "Bespoke Software Solutions",
+      "description": "Get software shaped precisely to your business, built to scale as you grow."
+    },
+    {
+      "icon": "🤖",
+      "name": "AI Integration",
+      "description": "Embed Generative AI into your workflows so your team works smarter, not harder."
+    },
+    {
+      "icon": "☁️",
+      "name": "Cloud Solutions",
+      "description": "Move to the cloud with confidence — resilient, cost-aware architectures from day one."
+    },
+    {
+      "icon": "🚀",
+      "name": "MVP Development",
+      "description": "Validate your idea fast with a production-ready MVP built for real user feedback."
+    },
+    {
+      "icon": "🔄",
+      "name": "Digital Transformation",
+      "description": "Modernise legacy systems and processes so your organisation stays competitive."
+    },
+    {
+      "icon": "🛠️",
+      "name": "Website Support & Maintenance",
+      "description": "Keep your digital presence healthy with proactive support, updates, and monitoring."
+    }
+  ]
 }

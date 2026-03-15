@@ -24,13 +24,21 @@ customElements.define('assistant-message', class extends HTMLElement {
     }
 });
 
+let revealObserver = null;
+
 window.initReveal = function initReveal() {
-    const observer = new IntersectionObserver(
+    document.documentElement.classList.add('reveal-enabled');
+
+    if (revealObserver) {
+        revealObserver.disconnect();
+    }
+
+    revealObserver = new IntersectionObserver(
         (entries) => {
             entries.forEach((entry) => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('is-visible');
-                    observer.unobserve(entry.target);
+                    revealObserver?.unobserve(entry.target);
                 }
             });
         },
@@ -38,7 +46,18 @@ window.initReveal = function initReveal() {
     );
 
     document.querySelectorAll('.reveal-item:not(.is-visible)').forEach((element) => {
-        observer.observe(element);
+        revealObserver.observe(element);
+    });
+};
+
+window.reObserveRevealItems = function reObserveRevealItems() {
+    if (!revealObserver) {
+        window.initReveal();
+        return;
+    }
+
+    document.querySelectorAll('.reveal-item:not(.is-visible)').forEach((element) => {
+        revealObserver.observe(element);
     });
 };
 

@@ -266,6 +266,7 @@ protected override async Task OnInitializedAsync()
 
 | Test | Action | Expected |
 |------|--------|----------|
+| Section visible on initial render | Navigate to `/` | `#services` is visible without requiring scroll interaction |
 | Six cards render | Navigate to `/` | Exactly 6 `.service-card` elements present |
 | Cards have name, icon, description | Inspect each card | Each has `.service-icon`, `.service-name`, `.service-description` |
 | Section has correct `id` | Inspect DOM | `<section id="services">` exists |

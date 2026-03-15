@@ -136,8 +136,14 @@ h1:focus {
     margin: auto;
 }
 
+/* Progressive enhancement: content remains visible when JS is unavailable/fails. */
 .reveal-item {
-    opacity: 0;
+    opacity: 1;
+    transform: none;
+}
+
+.reveal-enabled .reveal-item {
+    opacity: 1;
     transform: translateY(1.25rem);
     transition:
         opacity var(--motion-slow),
@@ -145,13 +151,13 @@ h1:focus {
     transition-delay: var(--reveal-delay, 0ms);
 }
 
-.reveal-item.is-visible {
+.reveal-enabled .reveal-item.is-visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .reveal-item {
+    .reveal-enabled .reveal-item {
         opacity: 1;
         transform: none;
         transition: none;

@@ -202,6 +202,7 @@ technologiesData = t3.Result;
 
 | Test | Action | Expected |
 |------|--------|----------|
+| Section visible on initial render | Navigate to `/` | `#technologies` is visible without requiring scroll interaction |
 | Section renders | Navigate to `/` | `<section id="technologies">` present |
 | At least 3 bands | Inspect DOM | At least 3 `.tech-band` elements |
 | Band labels present | Inspect `.tech-band-label` | Each has non-empty text |

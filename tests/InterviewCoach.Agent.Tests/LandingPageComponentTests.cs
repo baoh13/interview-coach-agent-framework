@@ -1,0 +1,164 @@
+using System.Net;
+using System.Net.Http;
+using System.Text;
+
+using Bunit;
+
+using InterviewCoach.WebUI.Components.Pages;
+
+using Microsoft.Extensions.DependencyInjection;
+
+using NSubstitute;
+
+using Shouldly;
+
+using Xunit;
+
+namespace InterviewCoach.Agent.Tests;
+
+public class LandingPageComponentTests : TestContext
+{
+    [Fact]
+    public void Given_Landing_Page_Data_When_LandingPage_Render_Invoked_Then_It_Should_Render_Modernized_Sections_And_Footer()
+    {
+        // Arrange
+        ConfigureHttpClientFactory(sitePropertiesJson: """
+            {
+              "name": "Baoh Consulting",
+              "title": "Software Development",
+              "email": "baoh@baohconsulting.co.uk",
+              "linkedIn": "baohoanggia",
+              "gitHub": "",
+              "twitter": "",
+              "youTube": "",
+              "medium": "",
+              "devDotTo": "",
+              "instagram": ""
+            }
+            """);
+
+        JSInterop.Mode = JSRuntimeMode.Loose;
+
+        // Act
+        var cut = RenderComponent<LandingPage>();
+
+        // Assert
+        cut.WaitForAssertion(() =>
+        {
+            cut.Find("section#services[aria-labelledby='services-heading']").ShouldNotBeNull();
+            cut.Find("section#how-we-work[aria-labelledby='process-heading']").ShouldNotBeNull();
+            cut.Find("section#technologies[aria-labelledby='technologies-heading']").ShouldNotBeNull();
+            cut.Find("section#contact[aria-labelledby='contact-heading']").ShouldNotBeNull();
+            cut.Find("footer.site-footer[role='contentinfo']").ShouldNotBeNull();
+
+            cut.FindAll(".service-card").Count.ShouldBe(6);
+            cut.FindAll(".service-card .service-icon[aria-hidden='true']").Count.ShouldBe(6);
+            cut.FindAll("ol.process-steps > li.process-step").Count.ShouldBe(4);
+            cut.FindAll(".tech-band").Count.ShouldBeGreaterThanOrEqualTo(3);
+
+            cut.Find("a[href='mailto:baoh@baohconsulting.co.uk']").TextContent.ShouldContain("baoh@baohconsulting.co.uk");
+
+            cut.FindAll(".footer-nav a").Select(a => a.GetAttribute("href")).ShouldBe(
+            [
+                "#services",
+                "#how-we-work",
+                "#technologies",
+                "#contact"
+            ]);
+
+            var linkedIn = cut.Find(".footer-social a[href='https://www.linkedin.com/in/baohoanggia']");
+            linkedIn.GetAttribute("target").ShouldBe("_blank");
+            linkedIn.GetAttribute("rel").ShouldBe("noopener noreferrer");
+        });
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Given_Missing_Email_When_LandingPage_Render_Invoked_Then_It_Should_Not_Render_Mailto_Cta(string email)
+    {
+        // Arrange
+        ConfigureHttpClientFactory(sitePropertiesJson: $$"""
+            {
+              "name": "Baoh Consulting",
+              "title": "Software Development",
+              "email": "{{email}}",
+              "linkedIn": "baohoanggia",
+              "gitHub": "",
+              "twitter": "",
+              "youTube": "",
+              "medium": "",
+              "devDotTo": "",
+              "instagram": ""
+            }
+            """);
+
+        JSInterop.Mode = JSRuntimeMode.Loose;
+
+        // Act
+        var cut = RenderComponent<LandingPage>();
+
+        // Assert
+        cut.WaitForAssertion(() => cut.FindAll("section#contact a[href^='mailto:']").ShouldBeEmpty());
+    }
+
+    private void ConfigureHttpClientFactory(string sitePropertiesJson)
+    {
+        var responseMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["/data/site-properties.json"] = sitePropertiesJson,
+            ["/data/services.json"] = """
+                {
+                  "description": "desc",
+                  "skills": ["AI integration"],
+                  "detailOrQuote": "quote",
+                  "cards": [
+                    { "icon": "⚙️", "name": "Bespoke Software Solutions", "description": "Desc 1" },
+                    { "icon": "🤖", "name": "AI Integration", "description": "Desc 2" },
+                    { "icon": "☁️", "name": "Cloud Solutions", "description": "Desc 3" },
+                    { "icon": "🚀", "name": "MVP Development", "description": "Desc 4" },
+                    { "icon": "🔄", "name": "Digital Transformation", "description": "Desc 5" },
+                    { "icon": "🛠️", "name": "Website Support & Maintenance", "description": "Desc 6" }
+                  ]
+                }
+                """,
+            ["/data/technologies.json"] = """
+                {
+                  "bands": [
+                    { "label": "AI & Machine Learning", "technologies": ["Azure OpenAI"] },
+                    { "label": "Cloud & Infrastructure", "technologies": ["Azure"] },
+                    { "label": "Backend", "technologies": ["ASP.NET Core"] },
+                    { "label": "Frontend", "technologies": ["Blazor"] }
+                  ]
+                }
+                """
+        };
+
+        var handler = new StubHttpMessageHandler(responseMap);
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("http://localhost") };
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        httpClientFactory.CreateClient().Returns(httpClient);
+
+        Services.AddSingleton(httpClientFactory);
+    }
+
+    private sealed class StubHttpMessageHandler(IReadOnlyDictionary<string, string> responseMap) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var requestPath = request.RequestUri?.AbsolutePath ?? string.Empty;
+            if (responseMap.TryGetValue(requestPath, out var responseContent))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(responseContent, Encoding.UTF8, "application/json")
+                });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)
+            {
+                Content = new StringContent("{}")
+            });
+        }
+    }
+}

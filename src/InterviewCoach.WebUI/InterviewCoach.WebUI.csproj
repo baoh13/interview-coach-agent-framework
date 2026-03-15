@@ -15,4 +15,19 @@
     <ProjectReference Include="..\InterviewCoach.ServiceDefaults\InterviewCoach.ServiceDefaults.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\data\cv.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\data\services.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\data\site-properties.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\data\technologies.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
