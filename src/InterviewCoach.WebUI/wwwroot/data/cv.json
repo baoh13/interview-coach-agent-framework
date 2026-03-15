@@ -1,0 +1,124 @@
+{
+  "name": "Bao Hoang",
+  "title": "Full-Stack Cloud Software Consultant / Senior .NET Consultant",
+  "location": "London, UK",
+  "email": "baoh@baohconsulting.co.uk",
+  "phone": "+44 7928590809",
+  "linkedin": "https://www.linkedin.com/in/baohoanggia/",
+  "summary": "A resourceful Full-Stack Cloud Software Consultant with over a decade of international experience across financial services, hospitality, telecommunications, gambling, and EV sectors. Specializing in C#, .NET, Azure, AWS, DevOps, and Solution Architecture. Experienced in building cloud-first solutions, event-driven systems, and Gen AI integrations. Proven ability to lead teams, deliver high-quality software quickly, and manage full SDLC in dynamic environments.",
+  "certifications": [
+    "AWS Certified Solutions Architect – Associate (SAA-C03)",
+    "Microsoft Certified: Developing Solutions for Microsoft Azure (AZ-204)",
+    "Microsoft Certified: Azure Fundamentals (AZ-900)"
+  ],
+  "languages": ["English", "Swedish", "Vietnamese"],
+  "skills": {
+    "backend": [".NET 8", "C#", "ASP.NET Core", "Entity Framework", "REST APIs", "GraphQL", "Microservices", "CQRS", "DDD"],
+    "frontend": ["Angular", "React", "Vue.js", "Redux", "HTML", "CSS", "JavaScript", "Responsive Layouts", "Angular Material"],
+    "cloud": ["Microsoft Azure", "AWS Services"],
+    "azure_services": ["Azure WebApp", "Azure DevOps", "Azure Functions", "Event Grid", "Event Hub", "Service Bus", "Cosmos DB", "Redis Cache", "KeyVault", "SQL Database", "Storage (Queue, Blob, Table)"],
+    "aws_services": ["AWS IAM", "AWS Lambda", "Kinesis", "EventBridge", "SQS", "API Gateway", "Fargate", "ECS", "DynamoDB", "CloudWatch", "CDK", "SSM"],
+    "devops": ["Docker", "Kubernetes", "Terraform", "TeamCity", "Octopus", "VSTS", "GitHub", "BitBucket", "Azure DevOps", "CI/CD Pipelines"],
+    "ai": [".NET Core 8", "Semantic Kernel", "Azure OpenAI Service", "Azure AI Search", "Azure Foundry", "RAG", "Vector Databases", "Qdrant", "Hugging Face", "LLM Agents", "Workflows", "Semantic Search"],
+    "database": ["SQL Server", "PostgreSQL", "MongoDB", "NoSQL", "Azure Cosmos DB", "Redshift"],
+    "monitoring": ["DataDog", "Grafana", "OpenTelemetry", "Loki"],
+    "security": ["OAuth2", "IdentityServer", "Azure AD", "Azure AD B2C", "MFA", "Custom Policies", "JWT Auth", "API Security"],
+    "methodologies": ["Agile", "Scrum", "TDD", "BDD", "SDLC", "Event-Driven Architecture", "Infrastructure as Code", "Clean Architecture"]
+  },
+  "projects": [
+    {
+      "name": "Tombola Replatforming Project (.NET 8 Migration)",
+      "role": "Senior .NET Engineer",
+      "period": "2024 Oct – Present",
+      "description": "Migrating Tombola’s platform from .NET Framework 4.8 to .NET 8 using the Strangler Fig Pattern, consolidating four codebases into a unified White Label product while supporting the Player Protection Risk Framework and Safeplay systems.",
+      "responsibilities": [
+        "Led event-driven Risk Framework for Player Protection Scores (UK).",
+        "Delivered OpenBanking integration for player financial verification.",
+        "Built internal compliance tools and migrated multi-tenant exclusion logic.",
+        "Handled full SDLC, troubleshooting, AWS management, and technical decisions."
+      ],
+      "technologies": [".NET 8", "C#", "Vue.js", "AWS Lambda", "AWS EventBridge", "SQS", "API Gateway", "Terraform", "SQL Server", "Postgres", "Redshift", "TDD", "Specflow"]
+    },
+    {
+      "name": "Customized IAM Solution Migration to Azure AD B2C",
+      "role": "CIAM Azure .NET Consultant",
+      "period": "2024 Jun – 2024 Aug",
+      "description": "Migrated an in-house IAM solution used by ASP.NET MVC and Xamarin apps to Azure AD B2C, introducing MFA, OAuth2, and secure API integrations.",
+      "responsibilities": [
+        "Gathered system requirements and designed migration strategy.",
+        "Set up Azure AD B2C tenant, custom policies, and user claims migration.",
+        "Integrated MVC and mobile apps using OpenIdConnect and MSAL.",
+        "Secured backend APIs with Azure AD B2C."
+      ],
+      "technologies": ["Azure AD B2C", "OAuth2", "OpenIdConnect", "MSAL", ".NET", "Azure Functions", "Serverless"]
+    },
+    {
+      "name": "Greenfield Electric Vehicle Solution (BP)",
+      "role": "Server-side Cloud Consultant",
+      "period": "2021 Jan – 2024 Jan",
+      "description": "Developed and launched EV management platforms for fleet managers in Europe using microservices and event-driven architectures across Azure and AWS.",
+      "responsibilities": [
+        "Wrote initial architecture and established coding standards.",
+        "Implemented CI/CD pipelines with Azure DevOps and Terraform.",
+        "Built microservices and APIs for EV domain using .NET Core and Azure services.",
+        "Led PoCs on AWS GraphQL (AppSync, Apollo), monitoring, and observability setup."
+      ],
+      "technologies": [".NET 6", "Azure AD", "Azure Data Factory", "Azure Event Grid", "AWS Lambda", "AWS Kinesis", "Terraform", "Docker", "Grafana", "Datadog", "OpenTelemetry"]
+    },
+    {
+      "name": "Akara Platform",
+      "role": "Technical Founder",
+      "period": "2020 Sep – 2021 Mar",
+      "description": "Built a cloud-native platform for event organizers to showcase events and attendee reviews.",
+      "technologies": [".NET Core", "C#", "Angular 10", "IdentityServer", "Azure", "Docker"]
+    },
+    {
+      "name": "CPA Global Platform (Baoh Consulting Ltd)",
+      "role": "Freelance Senior System Developer",
+      "period": "2018 – 2020 Jun",
+      "description": "Developed a cloud-first patent management platform for CPA Global, streamlining CI/CD pipelines and cloud infrastructure.",
+      "responsibilities": [
+        "Built authentication using IdentityServer4 (OAuth2).",
+        "Created document processing microservices with Azure Functions.",
+        "Led front-end PoC to production using Angular 8 and Ngrx.",
+        "Automated deployments reducing downtime from 2 hours to zero."
+      ],
+      "technologies": [".NET Core", "C#", "Angular", "Azure Functions", "Service Bus", "Azure Blob Storage", "CI/CD", "XUnit"]
+    },
+    {
+      "name": "Hospitality SaaS Platform (iRis Software Systems)",
+      "role": "System Developer",
+      "period": "2016 – 2018",
+      "description": "Enhanced global SaaS guest experience platform with new backend architecture and single-page reporting features.",
+      "technologies": [".NET", "React", "Redux", "Azure SQL", "Redis Cache", "ASP.NET MVC5", "TDD"]
+    },
+    {
+      "name": "Truphone Number Porting System",
+      "role": "System Developer",
+      "period": "2016",
+      "description": "Developed ASP.NET MVC application for number transfer across telecom networks.",
+      "technologies": ["ASP.NET MVC3", "NUnit", "Specflow", "Selenium", "Moq"]
+    },
+    {
+      "name": "Collector Bank Invoicing System",
+      "role": "System Developer",
+      "period": "2014 – 2015",
+      "description": "Maintained complex invoicing and credit systems integrating with Visa, MasterCard, and Experian.",
+      "technologies": [".NET", "WCF", "MVVM WPF", "NUnit", "RhinoMock", "AutoFixture"]
+    }
+  ],
+  "education": [
+    {
+      "degree": "MSc Computer Systems and Networks",
+      "institution": "Chalmers University of Technology",
+      "location": "Gothenburg, Sweden",
+      "years": "2012 – 2014"
+    },
+    {
+      "degree": "BSc Computer Science",
+      "institution": "Chalmers University of Technology",
+      "location": "Gothenburg, Sweden",
+      "years": "2008 – 2011"
+    }
+  ]
+}

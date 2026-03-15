@@ -1,6 +1,6 @@
 ---
 description: "Provide expert .NET software engineering guidance using modern software design patterns."
-name: "Expert .NET software engineer mode instructions"
+name: "Expert .NET software engineer"
 tools:
     [
         "vscode",
