@@ -1,19 +1,15 @@
-# Squad Team
-
-> interview-coach-agent-framework
-
-## Coordinator
-
-| Name | Role | Notes |
-|------|------|-------|
-| Squad | Coordinator | Routes work, enforces handoffs and reviewer gates. |
+Project: Portfolio site for a Software Consultancy specializing in Bespoke Software Solutions, AI Agents, Cloud Integration
+Owner: Bao Hoang
+Stack: C#, Blazor, Agent Framework, Azure
 
 ## Members
-
-| Name | Role | Charter | Status |
-|------|------|---------|--------|
-
-## Project Context
-
-- **Project:** interview-coach-agent-framework
-- **Created:** 2026-03-15
+| Name   | Role                   | Notes |
+|--------|------------------------|-------|
+| Keaton | Lead                   | Architecture, decisions, code review |
+| Dallas | Frontend Dev           | Blazor, UI, chat pages |
+| Fenster| Backend Dev            | Agent Framework, APIs |
+| Hockney| AI/Agent Specialist    | Models, prompts, agents |
+| Redfoot| Cloud/DevOps           | Azure, CI/CD, infra |
+| Hawke  | Tester                 | Tests, QA, edge cases |
+| Scribe | Session Logger         | Append-only logs & decisions |
+| Ralph  | Work Monitor           | Work queue, keep-alive |

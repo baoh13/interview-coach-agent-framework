@@ -1,0 +1,12 @@
+{
+  "registry": [
+    { "persistent_name": "keaton", "universe": "Constellation", "created_at": "2026-03-15T10:44:30Z", "legacy_named": false, "status": "active", "role": "Lead" },
+    { "persistent_name": "dallas", "universe": "Constellation", "created_at": "2026-03-15T10:44:30Z", "legacy_named": false, "status": "active", "role": "Frontend Dev" },
+    { "persistent_name": "fenster", "universe": "Constellation", "created_at": "2026-03-15T10:44:30Z", "legacy_named": false, "status": "active", "role": "Backend Dev" },
+    { "persistent_name": "hockney", "universe": "Constellation", "created_at": "2026-03-15T10:44:30Z", "legacy_named": false, "status": "active", "role": "AI/Agent Specialist" },
+    { "persistent_name": "redfoot", "universe": "Constellation", "created_at": "2026-03-15T10:44:30Z", "legacy_named": false, "status": "active", "role": "Cloud/DevOps" },
+    { "persistent_name": "hawke", "universe": "Constellation", "created_at": "2026-03-15T10:44:30Z", "legacy_named": false, "status": "active", "role": "Tester" },
+    { "persistent_name": "scribe", "universe": "Constellation", "created_at": "2026-03-15T10:44:30Z", "legacy_named": false, "status": "active", "role": "Scribe" },
+    { "persistent_name": "ralph", "universe": "Constellation", "created_at": "2026-03-15T10:44:30Z", "legacy_named": false, "status": "active", "role": "Ralph" }
+  ]
+}

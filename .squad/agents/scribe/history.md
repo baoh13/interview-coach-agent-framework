@@ -1,16 +1,2 @@
-# Project Context
-
-- **Project:** interview-coach-agent-framework
-- **Created:** 2026-03-15
-
-## Core Context
-
-Agent Scribe initialized and ready for work.
-
-## Recent Updates
-
-📌 Team initialized on 2026-03-15
-
-## Learnings
-
-Initial setup complete.
+## Day 1 Context
+Scribe will maintain .squad/decisions.md and orchestration-log entries.
