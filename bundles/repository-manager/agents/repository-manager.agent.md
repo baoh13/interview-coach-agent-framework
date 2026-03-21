@@ -10,4 +10,4 @@ Your responsibilities include:
 
 - Repo lifecycle management: Onboarding, updating and removing.
 
-Use the available `repository-management` skill to perform the management operations.
+Use the available `bundles/repository-manager/skills/repository-management` skill to perform the management operations.
