@@ -2,6 +2,72 @@
 
 An AI-powered interview coach that shows how to wire up [Microsoft Agent Framework](https://aka.ms/agent-framework), [Model Context Protocol (MCP)](https://modelcontextprotocol.io), and [Aspire](https://aspire.dev) into a working application you can deploy.
 
+## Repository Snapshot (For Agents)
+
+### 1. Repository Purpose
+
+This repository contains a production-style sample for an AI interview coaching application. It demonstrates how to orchestrate multi-agent interview workflows, connect MCP tools, persist interview sessions, and run the full stack locally or in Azure.
+
+Domain and business area:
+
+- Talent development and interview preparation
+- Conversational AI orchestration for guided coaching
+- Multi-service app composition for enterprise-ready AI solutions
+
+### 2. Repository Type
+
+This is a full-stack, multi-service solution (not a single app type). It includes:
+
+- UI/frontend: Blazor Web UI in `src/InterviewCoach.WebUI`
+- API/backend services: Agent orchestration and MCP services in `src/InterviewCoach.Agent` and `src/InterviewCoach.Mcp.InterviewData`
+- Infrastructure/orchestration: .NET Aspire app host and Azure deployment assets via `src/InterviewCoach.AppHost`, `apphost.cs`, and `azure.yaml`
+- Shared library/utilities: cross-cutting defaults in `src/InterviewCoach.ServiceDefaults`
+
+### 3. Technologies
+
+- Language: C# on .NET 10
+- Web framework: Blazor (interactive UI)
+- Agent framework: Microsoft Agent Framework
+- Tool protocol: Model Context Protocol (MCP)
+- Orchestration and local distributed app runtime: .NET Aspire
+- Data access: EF Core with SQLite (Interview session persistence)
+- Cloud/deployment: Azure Developer CLI (`azd`), Azure Container Apps, Bicep templates under `resources-foundry/infra`
+- Testing: xUnit with targeted tests under `tests/InterviewCoach.Agent.Tests`
+
+### 4. When To Modify This Repository
+
+Developers usually update this repository when they need to:
+
+- Add or change interview coaching behavior, prompts, or multi-agent handoff flows
+- Integrate or update MCP tools and server contracts
+- Introduce a new LLM provider, adjust provider wiring, or change provider configuration behavior
+- Update the Blazor UI experience, chat flow, landing content, or interaction patterns
+- Fix session persistence, data access, or repository behavior in InterviewData
+- Improve local orchestration, startup wiring, deployment infrastructure, or environment configuration
+- Add or update tests for workflow behavior, parsing/deserialization, or UI component rendering
+
+### 5. Documentation Found
+
+Primary docs discovered in this repository/workspace:
+
+- Root overview: `README.md`
+- Copilot instructions: `.github/copilot-instructions.md`
+- AGENTS.md: not found in this repository
+- docs folder (key files):
+   - `docs/ARCHITECTURE.md`
+   - `docs/MULTI-AGENT.md`
+   - `docs/TUTORIALS.md`
+   - `docs/FAQ.md`
+   - `docs/USER-MANUAL.md`
+   - `docs/LEARNING-OBJECTIVES.md`
+   - `docs/CONTRIBUTING.md`
+   - `docs/CHANGELOG.md`
+   - `docs/providers/README.md`
+   - `docs/providers/AZURE-OPENAI.md`
+   - `docs/providers/MICROSOFT-FOUNDRY.md`
+   - `docs/providers/GITHUB-MODELS.md`
+   - `docs/providers/GITHUB-COPILOT.md`
+
 ## What you'll learn
 
 This sample covers the patterns you'd need for a real agent deployment:
@@ -157,4 +223,3 @@ This project is licensed under the MIT License - see [LICENSE.md](LICENSE.md) fo
 
 ---
 
-Built by the CoreAI DevRel team | Questions? Check the [FAQ](docs/FAQ.md) or open an [issue](../../issue).
