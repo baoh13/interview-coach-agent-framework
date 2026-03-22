@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- ChatShell reusable component for centralizing chat message state and streaming orchestration
 - Initial release of Interview Coach with Microsoft Agent Framework
 - Multi-agent orchestration for job interview coaching
 - Integration with Microsoft Foundry, Azure OpenAI, and GitHub Models

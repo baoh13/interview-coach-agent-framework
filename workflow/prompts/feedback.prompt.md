@@ -1,5 +1,5 @@
 ---
-agent: "Workflow"
+agent: 'workflow/agents/workflow.agent.md'
 description: Analyze completed task context and update AI workflow artifacts (prompts, skills, agents, instructions) to reduce future errors and misguidance.
 ---
 

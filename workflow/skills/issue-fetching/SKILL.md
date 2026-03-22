@@ -1,6 +1,6 @@
 ---
 name: issue-fetching
-description: Fetch Github issue details using the Jira CLI and save them to a local tickets directory. Use when user requests to fetch/download/retrieve a Github issue.
+description: Fetch Github issue details using the Github CLI and save them to a local tickets directory. Use when user requests to fetch/download/retrieve a Github issue.
 user-invocable: false
 ---
 

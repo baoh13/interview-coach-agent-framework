@@ -27,6 +27,15 @@ We use Github Issues as the source for our tasks, and we have a workflow that in
 
 - Get next tasks to see what's available to work on. (Prompt: /workflow/prompts/whats-next)
 - Fetch the ticket details to a local task store so we have all the necessary information about the task. (Prompt: /workflow/prompts/fetch-ticket)
+- Claim issue by assigning it to yourself and transitioning it to the next workflow stage using Github CLI. (Prompt: /claim-ticket)
+- Research the task to understand the requirements and gather necessary information. (Prompt: /prepare-work)
+- Detail a proposed solution for the ticket for review and feedback.
+- Review the proposed solution visually before continuing. (Prompt: /plan-review {ticket files / research.md / solution.md} {list of repo directories})
+- Plan the implementation by breaking down the task into smaller steps and creating a todo list. (Prompt: /create-todo)
+- Implement the task by following the plan and completing the todo list. (Prompt: /implement-todo)
+- Review the implementation to ensure it meets the requirements and is of high quality. (Prompt: /diff-review)
+- Tidy up the implementation by validating tests, coverage, and documentation updates. (Prompt: /tidy-up)
+- Feedback and iterate on the implementation, skills and instructions based on the outcome. (Prompt: /feedback)
 
 Outside the implementation steps, you can also assist with general questions, provide guidance on best practices, and help troubleshoot any issues that arise during the workflow.
 

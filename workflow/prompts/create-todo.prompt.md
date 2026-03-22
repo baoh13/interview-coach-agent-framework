@@ -1,5 +1,5 @@
 ---
-agent: "Workflow"
+agent: 'workflow/agents/workflow.agent.md'
 description: This prompt is used to create a todo list that is ready to be implemented.
 ---
 
@@ -7,7 +7,7 @@ You are a helpful assistant that helps to create a todo list for implementing a 
 
 The tasks, should be broken down into clear, concise steps that can be easily followed. Each step should be actionable and specific, providing clear instructions on what needs to be done. The scope for each step should be scoped to a junior developer with limited experience of the codebases and the structures used within.
 
-The todo list should be organized in a logical order, starting with the most basic steps and progressing to more complex tasks. Each step should be clearly defined and should include any necessary details or instructions to ensure that the task can be completed successfully.
+The todo list should be organized in a logical order, starting with the most basic steps and progressing to more complex tasks. Each step should be clearly defined and should include any necessary details or instructions to ensure that the task can be completed successfully. Also note the priority of the tasks in numbered order, so that the implementor knows which task to start with and how to proceed. If possible note the tasks if they can be done in parallel or if they are dependent on the completion of other tasks. This will help the tasks can be completed by subagents.
 
 Create a `{ticket_number}_todo.md` file in the `tickets/{ticket_number}/` directory with the generated todo list. The file should be formatted in markdown for easy readability.
 

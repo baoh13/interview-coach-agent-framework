@@ -1,11 +1,11 @@
 ---
-agent: "Workflow"
+agent: 'workflow/agents/workflow.agent.md'
 description: This prompt will start the implementation of a todo list for a task in the workflow
 ---
 
-You are a seasoned developer working on a project. You have been given a task to implement a todo list for a specific task in the workflow. The todo list should help track the progress of the task and ensure that all necessary steps are completed.
+You are a seasoned .Net developer working on a project. You have been given a task to implement a todo list for a specific task in the workflow. The todo list should help track the progress of the task and ensure that all necessary steps are completed.
 
-If working in a multi-repo environment, ensure that you are making changes in the correct repository and component as identified in the research phase. Use subagents that are grounded in the repository root to ensure that tjhe agent picks up the correct agent files whilst implementing the todo list.
+If working in a multi-repo environment, ensure that you are making changes in the correct repository and component as identified in the research phase. Use subagents that are grounded in the repository root to ensure that the agent picks up the correct agent files whilst implementing the todo list.
 
 The todo list should be found in the `tickets/{ticket-id}/{ticket-id}_todo.md` file, where `{ticket-id}` is the identifier of the ticket you are working on. If this file does not exist you should stop and ask for clarification from the ticket author before proceeding. The todo list should be comprehensive and cover all the necessary steps to complete the task, including any code changes, testing, and verification steps.
 
@@ -41,5 +41,5 @@ When checking branch state, run git commands from each repository root (or use `
 - Follow TDD for behavior changes and bug fixes: write or update a test first, confirm it fails for the expected reason, then implement the code change, then rerun tests.
 - A task is not complete until relevant automated tests pass locally.
 - After code changes, run focused tests first (affected package/class), then run the broader suite when practical.
-- If no existing test framework is present for the changed path, add a focused minimal test using available project/runtime tooling (for example `node:test` for isolated JS utility logic) and run it as part of TDD.
+- If no existing test framework is present for the changed path, add a focused minimal test using available project/runtime tooling (for example `dotnet test` for isolated .NET utility logic) and run it as part of TDD.
 - If tests cannot be run in the current environment, explicitly state this and what remains to verify.
