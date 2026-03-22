@@ -22,6 +22,8 @@ Use this process:
 - Add or update tests when behavior changed but tests are missing or insufficient.
 - Check diagnostics/lint for modified files and classify findings as introduced by this change vs pre-existing.
 - If the ticket todo includes manual verification checkboxes, explicitly report which manual checks were executed vs still pending; do not mark pending checks as complete.
+- For manual UI checks, prefer normal user-style interactions (for example standard click/tap) over forced interactions; treat force-only success as a failure signal, not a pass.
+- If verification runs against stale/no-build binaries due environment constraints, mark results as provisional and do not close acceptance checks until a fresh build is validated.
 
 4. Assess test coverage suitability.
 - Evaluate whether the modified behavior is adequately protected by tests.

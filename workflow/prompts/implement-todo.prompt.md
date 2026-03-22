@@ -19,6 +19,10 @@ Here are the steps you should follow whilst implementing the todo list:
 7. Once all tests pass, review your code changes to ensure they meet the requirements and are of high quality. Make any necessary refinements or optimizations before finalizing the implementation of the todo item.
 8. If the item is complete, mark it as done in the todo list and move on to the next item until all items in the todo list are completed.
 
+UI verification guardrail:
+- When validating interactive UI behavior, use normal pointer/keyboard interactions first. Do not treat forced clicks or DOM-triggered events as acceptance evidence for user interaction requirements.
+- If environment constraints require running stale binaries (`--no-build`) or block fresh build/restore, record verification as provisional and keep related todo checks open.
+
 # Implementation notes
 
 ## Branching

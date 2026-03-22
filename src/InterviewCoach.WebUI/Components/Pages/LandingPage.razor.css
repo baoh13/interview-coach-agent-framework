@@ -277,59 +277,6 @@
     margin: 0;
 }
 
-.technologies-section {
-    padding: 5rem 2rem;
-    background: var(--color-surface-card);
-}
-
-.tech-bands {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2.5rem 3rem;
-}
-
-.tech-band-label {
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-text-muted);
-    margin: 0 0 1rem;
-}
-
-.tech-badge-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.tech-badge {
-    display: inline-block;
-    padding: 0.35rem 0.875rem;
-    background: var(--color-surface-base);
-    color: var(--color-text-secondary);
-    font-size: 0.875rem;
-    font-weight: 500;
-    border-radius: var(--radius-pill);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    transition:
-        background-color var(--motion-fast),
-        border-color var(--motion-fast),
-        color var(--motion-fast);
-    white-space: nowrap;
-}
-
-@media (hover: hover) {
-    .tech-badge:hover {
-        background-color: var(--color-surface-overlay);
-        border-color: var(--color-accent-border);
-        color: var(--color-accent-solid);
-    }
-}
-
 .contact-cta-section {
     background: var(--color-accent-gradient);
     padding: 6rem 2rem;
