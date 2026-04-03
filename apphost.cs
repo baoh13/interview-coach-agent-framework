@@ -5,6 +5,7 @@
 #:package CommunityToolkit.Aspire.Hosting.SQLite@13.*
 #:project ./src/InterviewCoach.Agent/InterviewCoach.Agent.csproj
 #:project ./src/InterviewCoach.Mcp.InterviewData/InterviewCoach.Mcp.InterviewData.csproj
+#:project ./src/InterviewCoach.Mcp.PresaleData/InterviewCoach.Mcp.PresaleData.csproj
 #:project ./src/InterviewCoach.WebUI/InterviewCoach.WebUI.csproj
 #:property UserSecretsId=7ae1635d-7ac9-43dd-b458-5f56d1b1ee02
 
@@ -13,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 const string RESOURCE_CONSTANTS_LLM_PROVIDER = "LlmProvider";
 const string RESOURCE_MCP_MARKITDOWN = "mcp-markitdown";
 const string RESOURCE_MCP_INTERVIEWDATA = "mcp-interview-data";
+const string RESOURCE_MCP_PRESALEDATA = "mcp-presale-data";
 const string RESOURCE_DB_SQLITE = "sqlite";
 const string RESOURCE_DB_NAME = "interviewcoach.db";
 const string RESOURCE_PROJECT_AGENT = "agent";
@@ -41,14 +43,21 @@ var mcpInterviewData = builder.AddProject<Projects.InterviewCoach_Mcp_InterviewD
                               .WithReference(sqlite)
                               .WaitFor(sqlite);
 
+var mcpPresaleData = builder.AddProject<Projects.InterviewCoach_Mcp_PresaleData>(RESOURCE_MCP_PRESALEDATA)
+                            .WithExternalHttpEndpoints()
+                            .WithReference(sqlite)
+                            .WaitFor(sqlite);
+
 var agent = builder.AddProject<Projects.InterviewCoach_Agent>(RESOURCE_PROJECT_AGENT)
                    .WithExternalHttpEndpoints()
                    .WithLlmReference(builder.Configuration, args)
                    .WithEnvironment(RESOURCE_CONSTANTS_LLM_PROVIDER, builder.Configuration[RESOURCE_CONSTANTS_LLM_PROVIDER] ?? string.Empty)
                    .WithReference(mcpMarkItDown.GetEndpoint("http"))
                    .WithReference(mcpInterviewData)
+                   .WithReference(mcpPresaleData)
                    .WaitFor(mcpMarkItDown)
-                   .WaitFor(mcpInterviewData);
+                   .WaitFor(mcpInterviewData)
+                   .WaitFor(mcpPresaleData);
 
 var webUI = builder.AddProject<Projects.InterviewCoach_WebUI>(RESOURCE_PROJECT_WEBUI)
                    .WithExternalHttpEndpoints()
@@ -71,6 +80,7 @@ public enum AgentMode
     Unknown,
     Single,
     LlmHandOff,
+    BaohAssistant,
     CopilotHandOff
 }
 

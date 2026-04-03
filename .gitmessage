@@ -1,0 +1,49 @@
+# Commit Message Format Guide
+# Follow Conventional Commits: https://www.conventionalcommits.org/
+#
+# Format:
+#   <type>(<scope>): <subject>
+#
+#   <body>
+#
+#   <footer>
+#
+# Types: feat, fix, refactor, perf, test, docs, chore, ci, style, build
+# Scopes: agent, api, ui, db, docs, skill (optional)
+#
+# EXAMPLE:
+#
+#   feat(agent): add batch processing for discovery phase
+#   
+#   Improve performance by processing user imports in batches instead
+#   of one at a time. Prevents database transaction timeouts for large
+#   imports.
+#   
+#   - Add DiscoveryFlowLimits configuration
+#   - Implement batch insert method
+#   - Add tests for atomicity
+#   
+#   Fixes #42
+#
+# RULES:
+#
+# • Use imperative mood ("add" not "added")
+# • Don't capitalize the first letter of subject
+# • No period at end of subject
+# • Subject: max 50 characters
+# • Body: wrap at 72 characters
+# • Explain WHAT and WHY, not HOW
+# • Reference issues with "Fixes #123" or "Related to #456"
+#
+# GOOD:
+#   feat(ui): add floating chat widget
+#   fix(db): resolve race condition in batch inserts
+#   docs: update architecture diagram
+#   chore: upgrade dependencies
+#
+# BAD:
+#   update stuff
+#   WIP
+#   Fix bug
+#   Added feature
+#

@@ -496,3 +496,6 @@ src/InterviewCoach.AppHost/appsettings.Development.json
 *\wwwroot\*
 /src/InterviewCoach.WebUI/wwwroot/app.css
 /src/InterviewCoach.WebUI/wwwroot/app.js
+
+# Hook audit log — may contain sensitive prompt fragments
+.github/hooks/blocked.log
