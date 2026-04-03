@@ -303,14 +303,16 @@ public static class AgentDelegateFactory
         // This prevents the stateless Triage from re-routing to an already-completed
         // phase based on keywords in the original user message.
         // Each specialist can still fall back to Triage for out-of-order requests.
+        #pragma warning disable MAAIW001
         var workflow = AgentWorkflowBuilder
-                       .CreateHandoffBuilderWith(triageAgent)
-                       .WithHandoffs(triageAgent, [receptionistAgent, behaviouralAgent, technicalAgent, summariserAgent])
-                       .WithHandoffs(receptionistAgent, [behaviouralAgent, triageAgent])
-                       .WithHandoffs(behaviouralAgent, [technicalAgent, triageAgent])
-                       .WithHandoffs(technicalAgent, [summariserAgent, triageAgent])
-                       .WithHandoff(summariserAgent, triageAgent)
-                       .Build();
+                   .CreateHandoffBuilderWith(triageAgent)
+                   .WithHandoffs(triageAgent, [receptionistAgent, behaviouralAgent, technicalAgent, summariserAgent])
+                   .WithHandoffs(receptionistAgent, [behaviouralAgent, triageAgent])
+                   .WithHandoffs(behaviouralAgent, [technicalAgent, triageAgent])
+                   .WithHandoffs(technicalAgent, [summariserAgent, triageAgent])
+                   .WithHandoff(summariserAgent, triageAgent)
+                   .Build();
+        #pragma warning restore MAAIW001
 
         return workflow.SetName(key);
     }
@@ -615,6 +617,7 @@ public static class AgentDelegateFactory
         // triage -> introduction -> discovery -> contact_collection -> summariser -> email
         // TODO(UI indicator): keep handoff edges aligned with emitted active-agent
         // metadata so UI phase/agent chips remain consistent with runtime routing.
+        #pragma warning disable MAAIW001
         var workflow = AgentWorkflowBuilder
                        .CreateHandoffBuilderWith(triageAgent)
                    .WithHandoffs(triageAgent, [introductionAgent, discoveryAgent, contactCollectionAgent, summariserAgent, emailAgent])
@@ -624,6 +627,7 @@ public static class AgentDelegateFactory
                    .WithHandoffs(summariserAgent, [emailAgent, triageAgent])
                    .WithHandoff(emailAgent, triageAgent)
                        .Build();
+        #pragma warning restore MAAIW001
 
         return workflow.SetName(key);
     }
