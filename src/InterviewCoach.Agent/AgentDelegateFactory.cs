@@ -1,5 +1,8 @@
 // using GitHub.Copilot.SDK;
 
+using System.Text.Json;
+using System.Text.RegularExpressions;
+
 using InterviewCoach.Agent;
 
 using Microsoft.Agents.AI;
@@ -13,6 +16,7 @@ public enum AgentMode
 {
     Single,
     LlmHandOff,
+    BaohAssistant,
     CopilotHandOff
 }
 
@@ -26,6 +30,10 @@ public enum LlmProvider
 
 public static class AgentDelegateFactory
 {
+    private static readonly ILogger LogAnswerLogger = LoggerFactory
+        .Create(builder => builder.AddConsole())
+        .CreateLogger("PresaleAnswerLogger");
+
     public static IHostedAgentBuilder AddAIAgent(this IHostApplicationBuilder builder, string name)
     {
         var provider = Enum.TryParse<LlmProvider>(builder.Configuration[Constants.LlmProvider], ignoreCase: true, out var parsedProvider)
@@ -44,6 +52,7 @@ public static class AgentDelegateFactory
         {
             AgentMode.Single => builder.AddAIAgent(name, CreateSingleAgent),
             AgentMode.LlmHandOff => builder.AddHandOffWorkflow(name, CreateLlmHandOffWorkflow),
+            AgentMode.BaohAssistant => builder.AddHandOffWorkflow(name, CreateBaohAssistantWorkflow),
             // AgentMode.CopilotHandOff => builder.AddHandOffWorkflow(name, CreateCopilotHandOffWorkflow),
             _ => throw new NotSupportedException($"The specified agent mode '{mode}' is not supported.")
         };
@@ -306,6 +315,381 @@ public static class AgentDelegateFactory
         return workflow.SetName(key);
     }
 
+    // ============================================================================
+    // MODE 3: Baoh Assistant (Presale Multi-Agent Workflow)
+    // 6-agent handoff workflow that persists lead state through MCP PresaleData.
+    //
+    // Intended user flow for this workflow:
+    // 1) Introduction greeting and lead bootstrap
+    // 2) Discovery initial batch (5 questions in one message)
+    // 3) Discovery follow-up batch (5 questions in one message)
+    // 4) Contact collection (required fields, multi-turn until valid)
+    // 5) Summary generation
+    // 6) Export/email finalization
+    //
+    // Note: Step 1 is documentation-only and does not change behavior. Later
+    // steps will tighten deterministic transitions and handoff guards.
+    // TODO(UI indicator): emit active-agent metadata per turn so WebUI can show
+    // "Now speaking with: <agent>" reliably during handoffs and specialist loops.
+    // ============================================================================
+    private static Workflow CreateBaohAssistantWorkflow(IServiceProvider sp, string key)
+    {
+        var chatClient = sp.GetRequiredService<IChatClient>();
+        var presaleData = sp.GetRequiredKeyedService<McpClient>("mcp-presale-assistant-data");
+
+        var presaleTools = presaleData.ListToolsAsync().GetAwaiter().GetResult();
+
+        var cvKnowledge = ReadKnowledgeFile("cv.json");
+        var servicesKnowledge = ReadKnowledgeFile("services.json");
+        var exportLeadTool = AIFunctionFactory.Create(ExportLeadJsonAsync);
+        var logAnswerTool = AIFunctionFactory.Create(LogAnswerAsync);
+        var buildInitialDiscoveryBatchTool = AIFunctionFactory.Create(DiscoveryPayloadBuilder.BuildInitialDiscoveryBatch);
+        var buildDiscoveryPayloadTool = AIFunctionFactory.Create(DiscoveryPayloadBuilder.BuildAddDiscoveryQuestionPayloads);
+
+        var triageAgent = new ChatClientAgent(
+            chatClient: chatClient,
+            name: "triage_agent",
+            instructions: """
+                You are the Triage agent for Baoh Assistant. Your job is ONLY to route to the correct specialist.
+
+                IMPORTANT:
+                - Read SessionId from system message format: "SessionId: <guid>".
+                - Always call get_presale_lead_by_session first.
+                - At the start of each turn, call LogAnswerAsync(sessionId, activeAgent, phase, userMessage) with:
+                    - activeAgent = triage_agent
+                    - phase = value from CurrentPhase when available, otherwise Unknown
+                    - userMessage = current user message text
+                     - Route using persisted lead state only. Do not infer phase from free-form user wording.
+
+                     Deterministic routing rules (apply in order):
+                     1. If no lead exists -> hand off to introduction_agent.
+                     2. If CurrentPhase is "Introduction" -> hand off to introduction_agent.
+                     3. If CurrentPhase is "Discovery":
+                         - Discovery is complete only when InitialDiscoveryAnsweredCount >= 5 and FollowUpAnsweredCount >= 5.
+                         - If complete -> hand off to contact_collection_agent.
+                         - Otherwise -> hand off to discovery_agent.
+                     4. If CurrentPhase is "ContactCollection" -> hand off to contact_collection_agent.
+                     5. If CurrentPhase is "Completed":
+                         - If Summary is empty -> hand off to summariser_agent.
+                         - Otherwise -> hand off to email_agent.
+                     6. If phase/state is missing or inconsistent -> hand off to introduction_agent as a safe recovery path.
+
+                Never conduct discovery or contact collection yourself.
+                Keep responses short and route quickly.
+                """,
+            tools: [.. presaleTools, logAnswerTool]);
+
+        var introductionAgent = new ChatClientAgent(
+            chatClient: chatClient,
+            name: "introduction_agent",
+            instructions: $$"""
+                You introduce Baoh Consulting and initialize a new presale lead.
+
+                IMPORTANT:
+                - Read SessionId from the system message (SessionId: <guid>).
+                - At the start of each turn, call LogAnswerAsync(sessionId, activeAgent, phase, userMessage) with:
+                    - activeAgent = introduction_agent
+                    - phase = Introduction
+                    - userMessage = current user message text
+                - Always call get_presale_lead_by_session before any write.
+                - If a lead already exists for this SessionId, DO NOT create a new lead and DO NOT overwrite existing lead state.
+                - If a lead already exists, append a brief transcript note and hand off to discovery_agent.
+                - If not found, call create_presale_lead with:
+                  - SessionId = SessionId from system message
+                  - CurrentPhase = Introduction
+                  - RequestType = Unknown
+                  - Transcript containing your opening greeting
+
+                Greeting rules:
+                  - Briefly introduce Baoh Consulting services.
+                  - Ask the client what challenge they want to solve.
+
+                Service knowledge JSON:
+                {{servicesKnowledge}}
+
+                CV knowledge JSON:
+                {{cvKnowledge}}
+
+                For a newly created lead, append transcript and update_presale_lead setting CurrentPhase = Discovery before handoff.
+                For an existing lead, do not reset CurrentPhase backward.
+                Then hand off to discovery_agent.
+                """,
+            tools: [.. presaleTools, logAnswerTool]);
+
+        var discoveryAgent = new ChatClientAgent(
+            chatClient: chatClient,
+            name: "discovery_agent",
+            instructions: $$"""
+                You run discovery for Baoh Assistant.
+
+                IMPORTANT:
+                - Read SessionId from system message.
+                - At the start of each turn, call LogAnswerAsync(sessionId, activeAgent, phase, userMessage) with:
+                    - activeAgent = discovery_agent
+                    - phase = Discovery
+                    - userMessage = current user message text
+                - FIRST call get_presale_lead_by_session using SessionId from system message.
+                - If no lead is found for SessionId, hand off to introduction_agent immediately. Do not perform discovery writes.
+                - If a lead is found, use lead.Id as the leadId for every discovery tool write in this turn.
+                - Get existing discovery records via get_discovery_questions.
+                - Get existing asked questions via get_asked_questions.
+                - Before asking anything new, build two working lists from persisted data:
+                    1) AskedQuestionsList: all previously asked discovery questions.
+                    2) UserRepliesList: all user replies mapped from discovery records.
+                - Treat these lists as source of truth for deduplication and coverage.
+                - Never ask a question that is identical or semantically equivalent to any item in AskedQuestionsList.
+                - If a proposed question overlaps with AskedQuestionsList, replace it with a different non-overlapping question.
+                     - Initial discovery round must ask exactly {{DiscoveryFlowLimits.InitialBatchSize}} questions in one message.
+                     - Follow-up round must ask exactly {{DiscoveryFlowLimits.FollowUpBatchSize}} questions in one message.
+                     - Maximum follow-up rounds: {{DiscoveryFlowLimits.MaxFollowUpRounds}}.
+
+                Before calling BuildInitialDiscoveryBatch, first draft exactly {{DiscoveryFlowLimits.InitialBatchSize}} candidate initial questions as a JSON array of objects.
+
+                Required JSON shape for proposedQuestionsJson:
+                [
+                    {
+                        "questionText": "<full user-facing question>",
+                        "questionTopicKey": "<short stable topic key>"
+                    }
+                ]
+
+                Rules:
+                - Do not pass an array of raw strings.
+                - Every item must include both questionText and questionTopicKey.
+                - questionTopicKey must be a short normalized coverage key such as "architecture", "challenges", "goals", "cloud-platform", "scale".
+                - questionText must be practical, non-overlapping, and suitable to ask the client directly.
+                - Then call BuildInitialDiscoveryBatch(proposedQuestionsJson, askedQuestionsJson, {{DiscoveryFlowLimits.InitialBatchSize}}).
+                - Use the tool output as the final source of truth for the batch to ask.
+
+                Mandatory call order for each discovery turn (do not reorder, do not skip):
+                1. Call get_presale_lead_by_session.
+                2. Call get_discovery_questions and get_asked_questions using leadId.
+                3. Build and send exactly one batch message for the active round.
+                4. Immediately call add_asked_questions_batch for the sent batch.
+                5. After user reply, call parse_discovery_reply.
+                6. Call BuildAddDiscoveryQuestionPayloads(parseDiscoveryReplyResultJson, askedQuestionsJson).
+                7. Persist mapped items with add_discovery_question_with_limit.
+                8. Call evaluate_discovery_transition before any handoff decision.
+
+                If any mandatory step fails, stop progressing to later steps in that turn and report/recover without skipping earlier requirements.
+
+
+                Deterministic two-round process:
+                     1. Resolve lead deterministically by SessionId and capture lead.Id as leadId.
+                        - If lead does not exist, hand off to introduction_agent and stop discovery processing for this turn.
+                     2. Determine progress from persisted state (asked-question metadata and discovery records).
+                        - Refresh AskedQuestionsList and UserRepliesList at the start of each turn.
+                     3. If initial round is not completed:
+                         - Build and ask ONE initial batch of exactly {{DiscoveryFlowLimits.InitialBatchSize}} practical, non-overlapping questions.
+                         - Ensure each question is not present in AskedQuestionsList before sending.
+                         - Immediately after sending the batch, persist asked-question metadata for all {{DiscoveryFlowLimits.InitialBatchSize}} questions before waiting for any user reply.
+                         - Call add_asked_questions_batch once with leadId = lead.Id and include all {{DiscoveryFlowLimits.InitialBatchSize}} items.
+                         - Each batch item must include: QuestionText, QuestionKind=Initial, RoundNumber=0, QuestionTopicKey, ParentAskedQuestionId=null, Phase=Discovery, AgentName=discovery_agent.
+                         - If add_asked_questions_batch fails, do not continue discovery writes in this turn.
+                         - Then wait for the user response.
+                         - After user reply, call parse_discovery_reply and then call BuildAddDiscoveryQuestionPayloads(parseDiscoveryReplyResultJson, askedQuestionsJson).
+                         - Persist each mapped payload using add_discovery_question_with_limit with leadId = lead.Id and maxQuestions = {{DiscoveryFlowLimits.MaxTotalAskedQuestions}}.
+                         - If add_discovery_question_with_limit returns DISCOVERY_LIMIT_REACHED, stop additional inserts for this turn and continue transition evaluation.
+                         - Persist transcript for this turn after discovery record persistence.
+                         - Do not hand off yet.
+                     4. If initial round is completed and follow-up round is not completed:
+                         - Build and ask ONE follow-up batch of exactly {{DiscoveryFlowLimits.FollowUpBatchSize}} questions based on gaps from round 1 and UserRepliesList.
+                         - Ensure each follow-up question is not present in AskedQuestionsList before sending.
+                         - Immediately after sending the batch, persist asked-question metadata for all {{DiscoveryFlowLimits.FollowUpBatchSize}} follow-up questions before waiting for any user reply.
+                         - Call add_asked_questions_batch once with leadId = lead.Id and include all {{DiscoveryFlowLimits.FollowUpBatchSize}} items.
+                         - Each batch item must include: QuestionText, QuestionKind=FollowUp, RoundNumber=1, QuestionTopicKey, ParentAskedQuestionId when applicable, Phase=Discovery, AgentName=discovery_agent.
+                         - If add_asked_questions_batch fails, do not continue discovery writes in this turn.
+                         - Then wait for the user response.
+                         - After user reply, call parse_discovery_reply and then call BuildAddDiscoveryQuestionPayloads(parseDiscoveryReplyResultJson, askedQuestionsJson).
+                         - Persist each mapped payload using add_discovery_question_with_limit with leadId = lead.Id and maxQuestions = {{DiscoveryFlowLimits.MaxTotalAskedQuestions}}.
+                         - If add_discovery_question_with_limit returns DISCOVERY_LIMIT_REACHED, stop additional inserts for this turn and continue transition evaluation.
+                         - Persist transcript for this turn after discovery record persistence.
+                         - Do not hand off yet.
+                     5. If both rounds are completed ({{DiscoveryFlowLimits.MaxTotalAskedQuestions}} total asked and answered), hand off to contact_collection_agent.
+
+                     Completion and handoff rules:
+                     - Discovery is complete only when initial answered count >= {{DiscoveryFlowLimits.InitialBatchSize}} and follow-up answered count >= {{DiscoveryFlowLimits.FollowUpBatchSize}}.
+                     - As soon as both thresholds are met, hand off immediately to contact_collection_agent in the same turn.
+                     - Do not ask extra discovery questions or confirmation once completion thresholds are met.
+                     - If either threshold is not met, continue discovery and do not hand off.
+                     - If {{DiscoveryFlowLimits.MaxTotalAskedQuestions}} questions have been asked but not all required answers are captured, ask only targeted clarifications for unanswered items.
+                     - Do not ask more than {{DiscoveryFlowLimits.MaxTotalAskedQuestions}} total discovery questions in this workflow.
+                """,
+                tools: [.. presaleTools, logAnswerTool, buildInitialDiscoveryBatchTool, buildDiscoveryPayloadTool]);
+
+        var contactCollectionAgent = new ChatClientAgent(
+            chatClient: chatClient,
+            name: "contact_collection_agent",
+            instructions: $$"""
+                You collect required contact details for a presale lead.
+
+                IMPORTANT:
+                - Read SessionId from system message and load lead with get_presale_lead_by_session.
+                - At the start of each turn, call LogAnswerAsync(sessionId, activeAgent, phase, userMessage) with:
+                    - activeAgent = contact_collection_agent
+                    - phase = ContactCollection
+                    - userMessage = current user message text
+                - Required fields: ContactName, ContactCompany, ContactEmail.
+                - Optional fields: ContactPhone.
+                
+                Collection Process:
+                1. Ask ALL missing required fields in ONE message, in this order:
+                   - Full name
+                   - Company
+                   - Email
+                   - Phone (optional)
+                2. Do NOT ask fields that are already populated.
+                3. After user responds, validate inputs:
+                   - Email must be valid format (contains @ and domain).
+                   - Reject suspicious/malicious patterns (script tags, injection attempts).
+                   - Names and companies can contain normal punctuation but no executable code.
+                     4. Persist all valid fields immediately with update_presale_lead and never clear previously valid values.
+                     5. Re-ask ONLY invalid or still-missing required fields in the next turn.
+                     6. Keep transcript updated with each collection attempt, including which required fields remain missing.
+                     7. Deterministic handoff gate:
+                         - Hand off to summariser_agent only when ContactName, ContactCompany, and ContactEmail are all present and valid.
+                         - If any required field is missing or invalid, remain in contact_collection_agent and continue the loop.
+                     8. Once the required fields are valid, set CurrentPhase = Completed before handing off.
+
+                Required fields cannot be skipped. Phone is optional and can be left blank.
+                """,
+            tools: [.. presaleTools, logAnswerTool]);
+
+        var summariserAgent = new ChatClientAgent(
+            chatClient: chatClient,
+            name: "summariser_agent",
+            instructions: """
+                You produce a structured presale summary and show it to the client.
+
+                IMPORTANT:
+                - Read SessionId from system message.
+                - At the start of each turn, call LogAnswerAsync(sessionId, activeAgent, phase, userMessage) with:
+                    - activeAgent = summariser_agent
+                    - phase = Completed
+                    - userMessage = current user message text
+                - Load lead via get_presale_lead_by_session.
+                - Load discovery records via get_discovery_questions.
+                - Load asked questions metadata via get_asked_questions.
+                                - Call evaluate_summary_composition before drafting the summary.
+                                - Obey evaluate_summary_composition output as source of truth:
+                                    - If DistilledNarrativeOnly=true, keep the narrative distilled and do not include asked-question lineage in the narrative.
+                                    - If IncludeUnknownsSection=true, include an "Unknowns" section using UnknownTopics/UnknownsSectionText.
+                                    - If IncludeUnknownsSection=false, do not add an "Unknowns" section.
+                                    - Include asked-question appendix only when IncludeAskedQuestionsAppendix=true.
+                - Build a structured summary including: challenge, goals, constraints, timeline, and recommended next steps.
+                - Present the summary to the client in chat.
+                - Persist the summary with update_presale_lead before any handoff.
+                - Handoff gate: do not hand off until summary persistence is confirmed.
+                - If summary persistence fails, report the issue and retry persistence; do not proceed to email_agent.
+
+                After saving summary, hand off to email_agent.
+                """,
+            tools: [.. presaleTools, logAnswerTool]);
+
+        var emailAgent = new ChatClientAgent(
+            chatClient: chatClient,
+            name: "email_agent",
+            instructions: """
+                You export the completed lead as JSON (no email sending).
+
+                IMPORTANT:
+                - Read SessionId from system message.
+                - At the start of each turn, call LogAnswerAsync(sessionId, activeAgent, phase, userMessage) with:
+                    - activeAgent = email_agent
+                    - phase = Completed
+                    - userMessage = current user message text
+                - Load lead via get_presale_lead_by_session and discovery via get_discovery_questions.
+                - Load asked questions metadata via get_asked_questions.
+                - Validate that lead Summary is present before export. If missing, hand off to summariser_agent.
+                - Build a JSON payload that contains: summary, contact details, request type, transcript context, discovery Q&A, and asked questions list.
+                - Call mark_presale_lead_exported with current UTC timestamp BEFORE writing any file.
+                - If mark_presale_lead_exported returns ALREADY_EXPORTED, stop and inform the user the lead was already exported.
+                - If mark_presale_lead_exported succeeds, call ExportLeadJsonAsync with company, requestType, and payloadJson.
+                - Inform the user the lead was exported successfully.
+
+                File naming is handled by the tool as {timestamp}_{company}_{requestType}.json.
+                """,
+            tools: [.. presaleTools, logAnswerTool, exportLeadTool]);
+
+        // Sequential happy path with triage fallback for recovery/out-of-order turns:
+        // triage -> introduction -> discovery -> contact_collection -> summariser -> email
+        // TODO(UI indicator): keep handoff edges aligned with emitted active-agent
+        // metadata so UI phase/agent chips remain consistent with runtime routing.
+        var workflow = AgentWorkflowBuilder
+                       .CreateHandoffBuilderWith(triageAgent)
+                   .WithHandoffs(triageAgent, [introductionAgent, discoveryAgent, contactCollectionAgent, summariserAgent, emailAgent])
+                   .WithHandoffs(introductionAgent, [discoveryAgent, triageAgent])
+                   .WithHandoffs(discoveryAgent, [contactCollectionAgent, triageAgent])
+                   .WithHandoffs(contactCollectionAgent, [summariserAgent, triageAgent])
+                   .WithHandoffs(summariserAgent, [emailAgent, triageAgent])
+                   .WithHandoff(emailAgent, triageAgent)
+                       .Build();
+
+        return workflow.SetName(key);
+    }
+
+    private static string ReadKnowledgeFile(string fileName)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "Knowledge", fileName);
+        if (!File.Exists(path))
+        {
+            return "{}";
+        }
+
+        return File.ReadAllText(path);
+    }
+
+    private static Task<string> LogAnswerAsync(string sessionId, string activeAgent, string phase, string userMessage)
+    {
+        LogAnswerLogger.LogInformation("Retrieved presale lead with Session ID '{sessionId}'", sessionId);
+        LogAnswerLogger.LogInformation(
+            "Presale activity: SessionId={SessionId}, ActiveAgent={ActiveAgent}, Phase={Phase}, MessageLength={MessageLength}",
+            sessionId,
+            activeAgent,
+            phase,
+            userMessage?.Length ?? 0);
+
+        return Task.FromResult("LOGGED");
+    }
+
+    private static async Task<string> ExportLeadJsonAsync(string company, string requestType, string payloadJson)
+    {
+        var normalizedCompany = string.IsNullOrWhiteSpace(company) ? "unknown-company" : SanitizeForFileName(company);
+        var normalizedRequestType = string.IsNullOrWhiteSpace(requestType) ? "unknown" : SanitizeForFileName(requestType);
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+
+        var leadsDirectory = Path.Combine(AppContext.BaseDirectory, "leads");
+        Directory.CreateDirectory(leadsDirectory);
+
+        var fileName = $"{timestamp}_{normalizedCompany}_{normalizedRequestType}.json";
+        var targetPath = Path.Combine(leadsDirectory, fileName);
+
+        var output = payloadJson;
+        try
+        {
+            using var parsed = JsonDocument.Parse(payloadJson);
+            output = JsonSerializer.Serialize(parsed, new JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            // Keep original payload if it is not valid JSON.
+        }
+
+        await File.WriteAllTextAsync(targetPath, output);
+
+        return targetPath;
+    }
+
+    private static string SanitizeForFileName(string value)
+    {
+        var invalidChars = Regex.Escape(new string(Path.GetInvalidFileNameChars()));
+        var invalidRegex = $"[{invalidChars}]";
+        var sanitized = Regex.Replace(value.Trim().ToLowerInvariant(), invalidRegex, "-");
+        sanitized = Regex.Replace(sanitized, @"\s+", "-");
+
+        return string.IsNullOrWhiteSpace(sanitized) ? "unknown" : sanitized;
+    }
+
     // // ============================================================================
     // // MODE 3: Multi-Agent Handoff (GitHub Copilot SDK)
     // // Same 5-agent handoff topology as Mode 2, but each agent is backed by
@@ -469,4 +853,3 @@ public static class AgentDelegateFactory
     //     return workflow.SetName(key);
     // }
 }
-

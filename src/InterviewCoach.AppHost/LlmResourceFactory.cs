@@ -14,6 +14,7 @@ public enum AgentMode
     Unknown,
     Single,
     LlmHandOff,
+    BaohAssistant,
     CopilotHandOff
 }
 
@@ -155,11 +156,11 @@ public static class LlmResourceFactory
         var apiKey = source.ApplicationBuilder
                            .AddParameter(name: API_KEY_RESOURCE_NAME, value: accessKey, secret: true);
         var chat = source.ApplicationBuilder
-                        //  .AddConnectionString(
-                        //      LLM_PROJECT_NAME,
-                        //     //  ReferenceExpression.Create($"Endpoint:{endpoint};Key={accessKey};Model={deploymentName}"));
-                        //     //  ReferenceExpression.Create($"Endpoint={string.Join("://", endpoint.Split([':', '/'], StringSplitOptions.RemoveEmptyEntries).Take(2))}/openai/v1/;Model={deploymentName}"));
-                        //     //  ReferenceExpression.Create($"Endpoint={string.Join("://", endpoint.Split([':', '/'], StringSplitOptions.RemoveEmptyEntries).Take(2))}/openai/v1/;Key={accessKey};Model={deploymentName}"));
+                         //  .AddConnectionString(
+                         //      LLM_PROJECT_NAME,
+                         //     //  ReferenceExpression.Create($"Endpoint:{endpoint};Key={accessKey};Model={deploymentName}"));
+                         //     //  ReferenceExpression.Create($"Endpoint={string.Join("://", endpoint.Split([':', '/'], StringSplitOptions.RemoveEmptyEntries).Take(2))}/openai/v1/;Model={deploymentName}"));
+                         //     //  ReferenceExpression.Create($"Endpoint={string.Join("://", endpoint.Split([':', '/'], StringSplitOptions.RemoveEmptyEntries).Take(2))}/openai/v1/;Key={accessKey};Model={deploymentName}"));
                          .AddOpenAI(LLM_PROJECT_NAME)
                          .WithEndpoint($"{string.Join("://", endpoint.Split([':', '/'], StringSplitOptions.RemoveEmptyEntries).Take(2))}/openai/v1/")
                          .WithApiKey(apiKey)

@@ -7,8 +7,8 @@ using Bunit;
 
 using InterviewCoach.WebUI.Components.Pages;
 
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 
 using NSubstitute;
 

@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\InterviewCoach.Shared\InterviewCoach.Shared.csproj" />
     <ProjectReference Include="..\InterviewCoach.ServiceDefaults\InterviewCoach.ServiceDefaults.csproj" />
   </ItemGroup>
 

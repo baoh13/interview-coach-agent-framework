@@ -15,7 +15,7 @@
     private ILogger<ChatShell> Logger { get; set; } = null!;
 
     [Parameter]
-    public string? ConversationId { get; set; }
+    public string? WorkflowName { get; set; }
 
     [Parameter]
     public EventCallback<ChatMessage> OnMessageAdded { get; set; }
@@ -27,6 +27,7 @@
     private string? lastSessionId;
     private ChatMessage? systemPromptMessage;
     private ChatMessage? sessionIdMessage;
+    private ChatMessage? workflowMessage;
     private CancellationTokenSource? currentResponseCancellation;
     private ChatMessage? currentResponseMessage;
 
@@ -130,9 +131,16 @@
 
         systemPromptMessage = new(ChatRole.System, SystemPrompt);
         sessionIdMessage = new(ChatRole.System, $"SessionId: {sessionId}");
+        workflowMessage = string.IsNullOrWhiteSpace(WorkflowName)
+            ? null
+            : new ChatMessage(ChatRole.System, $"Workflow: {WorkflowName.Trim()}");
 
         messages.Add(systemPromptMessage);
         messages.Add(sessionIdMessage);
+        if (workflowMessage is not null)
+        {
+            messages.Add(workflowMessage);
+        }
 
         Logger.LogInformation("Started new chat session with SessionId: {SessionId}", sessionId);
     }
@@ -146,12 +154,24 @@
             return baseMessages;
         }
 
-        var outboundMessages = new[] { systemPromptMessage, sessionIdMessage }
-            .Concat(baseMessages.Where(m => ReferenceEquals(m, systemPromptMessage) == false
-                                            && ReferenceEquals(m, sessionIdMessage) == false));
+        var systemMessages = new List<ChatMessage>(capacity: 3)
+        {
+            systemPromptMessage,
+            sessionIdMessage
+        };
 
-        return outboundMessages;
+        if (workflowMessage is not null)
+        {
+            systemMessages.Add(workflowMessage);
+        }
+
+        return systemMessages.Concat(baseMessages.Where(m => IsSessionSystemMessage(m) == false));
     }
+
+    private bool IsSessionSystemMessage(ChatMessage message)
+        => ReferenceEquals(message, systemPromptMessage)
+           || ReferenceEquals(message, sessionIdMessage)
+           || ReferenceEquals(message, workflowMessage);
 
     public void Dispose()
         => currentResponseCancellation?.Cancel();

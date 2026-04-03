@@ -12,10 +12,13 @@
     <NoMessagesContent>
         <div>I'm your friendly interview coach. To get started, enter the link or text of your resume and job
             description.</div>
+        <ChatCitation File="Example_Emergency_Survival_Kit.pdf" Quote="Sample citation" />
+        <ChatCitation File="Example_GPS_Watch.pdf" Quote="Sample citation" />
         </NoMessagesContent>
     </ChatMessageList>
 
 <div class="chat-container">
+    <ChatSuggestions OnSelected="HandleSendMessage" @ref="@chatSuggestions" />
     <ChatInput OnSend="@HandleSendMessage" @ref="@chatInput" />
 </div>
 
@@ -24,6 +27,7 @@
 @code {
     private ChatShell? chatShell;
     private ChatInput? chatInput;
+    private ChatSuggestions? chatSuggestions;
 
     private IReadOnlyList<ChatMessage> GetMessages()
     {
@@ -32,6 +36,8 @@
 
     private async Task HandleSendMessage(ChatMessage userMessage)
     {
+        chatSuggestions?.Clear();
+
         // If a file is attached, upload it and append the URL to the message
         var file = chatInput?.AttachedFile;
         if (file is not null)
@@ -63,11 +69,17 @@
     private async Task HandleNewChat()
     {
         await chatShell!.ResetConversationAsync();
+        chatSuggestions?.Clear();
         await chatInput!.FocusAsync();
     }
 
     private Task OnMessageAdded(ChatMessage message)
     {
+        if (message.Role == ChatRole.Assistant)
+        {
+            chatSuggestions?.Update(GetMessages());
+        }
+
         return Task.CompletedTask;
     }
 }

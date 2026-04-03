@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.1.2">
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.2.0">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -19,6 +19,8 @@
   <ItemGroup>
     <ProjectReference Include="..\InterviewCoach.Agent\InterviewCoach.Agent.csproj" />
     <ProjectReference Include="..\InterviewCoach.Mcp.InterviewData\InterviewCoach.Mcp.InterviewData.csproj" />
+    <ProjectReference Include="..\InterviewCoach.Mcp.PresaleData\InterviewCoach.Mcp.PresaleData.csproj" />
+    <ProjectReference Include="..\InterviewCoach.Shared\InterviewCoach.Shared.csproj" />
     <ProjectReference Include="..\InterviewCoach.WebUI\InterviewCoach.WebUI.csproj" />
   </ItemGroup>
 
