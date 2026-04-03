@@ -1,6 +1,8 @@
 # Commit Message Format Guide
 # Follow Conventional Commits: https://www.conventionalcommits.org/
-#
+
+# Include: summary, changes breakdown, testing done, and deployment notes.
+
 # Format:
 #   <type>(<scope>): <subject>
 #
