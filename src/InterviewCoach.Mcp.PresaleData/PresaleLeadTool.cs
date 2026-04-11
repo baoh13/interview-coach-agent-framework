@@ -18,20 +18,11 @@ public interface IPresaleLeadTool
     Task<AskedQuestion?> AddAskedQuestionAsync(Guid leadId, AskedQuestion askedQuestion);
     Task<AskedQuestionBatchAddResult> AddAskedQuestionsBatchAsync(Guid leadId, IReadOnlyList<AskedQuestion> askedQuestions);
     Task<IEnumerable<AskedQuestion>> GetAskedQuestionsAsync(Guid leadId);
-    Task<ParseDiscoveryReplyResult> ParseDiscoveryReplyAsync(ParseDiscoveryReplyRequest request);
-    Task<EvaluateFollowUpPolicyResult> EvaluateFollowUpPolicyAsync(EvaluateFollowUpPolicyRequest request);
-    Task<EvaluateAndPersistFollowUpsResult> EvaluateAndPersistFollowUpsAsync(EvaluateAndPersistFollowUpsRequest request);
-    Task<EvaluateDiscoveryTransitionResult> EvaluateDiscoveryTransitionAsync(EvaluateDiscoveryTransitionRequest request);
-    Task<EvaluateSummaryCompositionResult> EvaluateSummaryCompositionAsync(EvaluateSummaryCompositionRequest request);
 }
 
 [McpServerToolType]
 public class PresaleLeadTool(
     IPresaleLeadRepository repository,
-    IDiscoveryReplyParserService discoveryReplyParserService,
-    IDiscoveryFollowUpPolicyService discoveryFollowUpPolicyService,
-    IDiscoveryFollowUpPersistenceService discoveryFollowUpPersistenceService,
-    IDiscoveryStateTransitionService discoveryStateTransitionService,
     ISummaryCompositionPolicyService summaryCompositionPolicyService,
     ILogger<PresaleLeadTool> logger) : IPresaleLeadTool
 {
@@ -219,116 +210,5 @@ public class PresaleLeadTool(
         logger.LogInformation("Retrieved {count} asked question records for lead '{leadId}'", questions.Count(), leadId);
 
         return questions;
-    }
-
-    [McpServerTool(Name = "parse_discovery_reply", Title = "Parse deterministic discovery numbered reply")]
-    [Description("Parses user discovery replies in deterministic numbered format and returns multi-map output for asked questions.")]
-    public async Task<ParseDiscoveryReplyResult> ParseDiscoveryReplyAsync(
-        [Description("Parser request payload")] ParseDiscoveryReplyRequest request)
-    {
-        var result = await discoveryReplyParserService.ParseAsync(request);
-        if (!result.Success)
-        {
-            logger.LogWarning("Discovery reply parse failed for lead '{leadId}'. ErrorCode={errorCode}", request.LeadId, result.ErrorCode);
-        }
-        else
-        {
-            logger.LogInformation("Discovery reply parsed for lead '{leadId}'. items={count}", request.LeadId, result.Items.Count);
-        }
-
-        return result;
-    }
-
-    [McpServerTool(Name = "evaluate_followup_policy", Title = "Evaluate deterministic follow-up policy")]
-    [Description("Evaluates follow-up proposals against unresolved topics, caps, rounds, and parent-link rules.")]
-    public async Task<EvaluateFollowUpPolicyResult> EvaluateFollowUpPolicyAsync(
-        [Description("Follow-up policy request payload")] EvaluateFollowUpPolicyRequest request)
-    {
-        var result = await discoveryFollowUpPolicyService.EvaluateAsync(request);
-        if (!result.Success)
-        {
-            logger.LogWarning("Follow-up policy evaluation failed for lead '{leadId}'. ErrorCode={errorCode}", request.LeadId, result.ErrorCode);
-        }
-        else
-        {
-            logger.LogInformation(
-                "Follow-up policy evaluated for lead '{leadId}'. allow={allow}, approved={approvedCount}, limitsReached={limitsReached}, unknownsRequired={unknownsRequired}",
-                request.LeadId,
-                result.AllowFollowUpQuestions,
-                result.ApprovedQuestions.Count,
-                result.LimitsReached,
-                result.UnknownsRequired);
-        }
-
-        return result;
-    }
-
-    [McpServerTool(Name = "evaluate_and_persist_followups", Title = "Evaluate and persist follow-up questions atomically")]
-    [Description("Atomically evaluates proposed follow-ups and persists approved asked-question records with synchronized lead state updates.")]
-    public async Task<EvaluateAndPersistFollowUpsResult> EvaluateAndPersistFollowUpsAsync(
-        [Description("Atomic follow-up persistence request payload")] EvaluateAndPersistFollowUpsRequest request)
-    {
-        var result = await discoveryFollowUpPersistenceService.EvaluateAndPersistAsync(request);
-        if (!result.Success)
-        {
-            logger.LogWarning("Atomic follow-up persistence failed for lead '{leadId}'. ErrorCode={errorCode}", request.LeadId, result.ErrorCode);
-        }
-        else
-        {
-            logger.LogInformation(
-                "Atomic follow-up persistence evaluated for lead '{leadId}'. allow={allow}, persisted={persistedCount}, limitsReached={limitsReached}",
-                request.LeadId,
-                result.AllowFollowUpQuestions,
-                result.PersistedAskedQuestions.Count,
-                result.LimitsReached);
-        }
-
-        return result;
-    }
-
-    [McpServerTool(Name = "evaluate_discovery_transition", Title = "Evaluate and apply deterministic discovery transition")]
-    [Description("Applies deterministic discovery transition rules and updates lead state to avoid workflow stalls.")]
-    public async Task<EvaluateDiscoveryTransitionResult> EvaluateDiscoveryTransitionAsync(
-        [Description("Transition evaluation request payload")] EvaluateDiscoveryTransitionRequest request)
-    {
-        var result = await discoveryStateTransitionService.EvaluateAndApplyAsync(request);
-        if (!result.Success)
-        {
-            logger.LogWarning("Discovery transition evaluation failed for lead '{leadId}'. ErrorCode={errorCode}", request.LeadId, result.ErrorCode);
-        }
-        else
-        {
-            logger.LogInformation(
-                "Discovery transition evaluated for lead '{leadId}'. shouldMove={shouldMove}, reason={reason}, fallback={fallback}",
-                request.LeadId,
-                result.ShouldMoveToContactCollection,
-                result.TransitionReason,
-                result.UsedFallback);
-        }
-
-        return result;
-    }
-
-    [McpServerTool(Name = "evaluate_summary_composition", Title = "Evaluate deterministic summary composition policy")]
-    [Description("Determines whether summary should include an Unknowns section and enforces distilled narrative behavior from persisted diagnostics.")]
-    public async Task<EvaluateSummaryCompositionResult> EvaluateSummaryCompositionAsync(
-        [Description("Summary composition policy request payload")] EvaluateSummaryCompositionRequest request)
-    {
-        var result = await summaryCompositionPolicyService.EvaluateAsync(request);
-        if (!result.Success)
-        {
-            logger.LogWarning("Summary composition evaluation failed for lead '{leadId}'. ErrorCode={errorCode}", request.LeadId, result.ErrorCode);
-        }
-        else
-        {
-            logger.LogInformation(
-                "Summary composition evaluated for lead '{leadId}'. includeUnknowns={includeUnknowns}, distilled={distilled}, reason={reason}",
-                request.LeadId,
-                result.IncludeUnknownsSection,
-                result.DistilledNarrativeOnly,
-                result.DecisionReason);
-        }
-
-        return result;
     }
 }

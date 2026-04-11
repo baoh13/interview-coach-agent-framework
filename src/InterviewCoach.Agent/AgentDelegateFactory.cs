@@ -52,7 +52,7 @@ public static class AgentDelegateFactory
         {
             AgentMode.Single => builder.AddAIAgent(name, CreateSingleAgent),
             AgentMode.LlmHandOff => builder.AddHandOffWorkflow(name, CreateLlmHandOffWorkflow),
-            AgentMode.BaohAssistant => builder.AddHandOffWorkflow(name, CreateBaohAssistantWorkflow),
+            AgentMode.BaohAssistant => builder.AddHandOffWorkflow(name, CreatePresaleAssistantWorkflow),
             // AgentMode.CopilotHandOff => builder.AddHandOffWorkflow(name, CreateCopilotHandOffWorkflow),
             _ => throw new NotSupportedException($"The specified agent mode '{mode}' is not supported.")
         };
@@ -626,6 +626,94 @@ public static class AgentDelegateFactory
                    .WithHandoffs(contactCollectionAgent, [summariserAgent, triageAgent])
                    .WithHandoffs(summariserAgent, [emailAgent, triageAgent])
                    .WithHandoff(emailAgent, triageAgent)
+                       .Build();
+        #pragma warning restore MAAIW001
+
+        return workflow.SetName(key);
+    }
+
+    private static Workflow CreatePresaleAssistantWorkflow(IServiceProvider sp, string key)
+    {
+        var chatClient = sp.GetRequiredService<IChatClient>();
+        var presaleData = sp.GetRequiredKeyedService<McpClient>("mcp-presale-assistant-data");
+
+        var presaleTools = presaleData.ListToolsAsync().GetAwaiter().GetResult();
+
+        var cvKnowledge = ReadKnowledgeFile("cv.json");
+        var servicesKnowledge = ReadKnowledgeFile("services.json");
+        var exportLeadTool = AIFunctionFactory.Create(ExportLeadJsonAsync);
+        var logAnswerTool = AIFunctionFactory.Create(LogAnswerAsync);
+        var buildInitialDiscoveryBatchTool = AIFunctionFactory.Create(DiscoveryPayloadBuilder.BuildInitialDiscoveryBatch);
+        var buildDiscoveryPayloadTool = AIFunctionFactory.Create(DiscoveryPayloadBuilder.BuildAddDiscoveryQuestionPayloads);
+
+        var triageAgent = new ChatClientAgent(
+            chatClient: chatClient,
+            name: "triage_agent",
+            instructions: """
+                You are the Triage agent for an AI-powerd IT Presale Assistant.
+                Your ONLY job is to look up the current session and hand off to the
+                right specialist agent. You do NOT answer questions.
+                
+                IMPORTANT: A SessionId is provided in the system message in the format
+                "SessionId: <guid>". Use it EVERY time you are invoked.
+                
+                Step 1 — Look up the session:
+                  Call get_presale_lead_by_session with the SessionId GUID.
+
+                Step 2 — Log the user message for analytics:
+                  Call LogAnswerAsync(sessionId, activeAgent, currentPhase, userMessage) with:
+                    - sessionId = SessionId from system message
+                    - activeAgent = triage_agent
+                    - currentPhase = "Triage"
+                    - userMessage = current user message text
+                
+                Step 2 — Route based on the CurrentPhase field (ignore message content):
+                  - null, not found or introduction → hand off to "introduction_agent"
+                  - "discovery"    → hand off to "discovery_agent"
+                """,
+            tools: [.. presaleTools, logAnswerTool]);
+
+        var introductionAgent = new ChatClientAgent(
+            chatClient: chatClient,
+            name: "introduction_agent",
+            instructions: $$"""
+                You are the Introduction agent for an AI-powerd IT Presale Assistant.
+                    Your job is to greet the client and set up the presale lead for discovery.
+
+                IMPORTANT: A SessionId is provided in the system message in the format
+                "SessionId: <guid>". Use it EVERY time you are invoked.
+
+                Greeting rules:
+                  - Briefly introduce Baoh Consulting services.
+                  - Ask the client what challenge they want to solve.
+
+                Service knowledge JSON:
+                {{servicesKnowledge}}
+
+                CV knowledge JSON:
+                {{cvKnowledge}}
+
+                Step 1 — Look up the session:
+                  Call get_presale_lead_by_session with the SessionId GUID.
+
+                Step 2 — Log the user message for analytics:
+                    Call LogAnswerAsync(sessionId, activeAgent, currentPhase, userMessage) with:
+                        - sessionId = SessionId from system message
+                        - activeAgent = introduction_agent
+                        - currentPhase = "Introduction"
+                        - userMessage = current user message text
+                
+                Step 3 
+                    - If no lead exists, create a new lead with create_presale_lead. 
+                    - If a lead already exists, DO NOT create a new lead and DO NOT overwrite existing lead state.
+                """,
+            tools: [.. presaleTools, logAnswerTool]);
+
+        #pragma warning disable MAAIW001
+        var workflow = AgentWorkflowBuilder
+                       .CreateHandoffBuilderWith(triageAgent)
+                   .WithHandoffs(triageAgent, [introductionAgent])
+                   .WithHandoffs(introductionAgent, [triageAgent])
                        .Build();
         #pragma warning restore MAAIW001
 

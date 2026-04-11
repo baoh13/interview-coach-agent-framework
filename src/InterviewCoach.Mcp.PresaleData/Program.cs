@@ -24,10 +24,6 @@ builder.AddSqliteConnection(SqliteResourceNames.PresaleDataResourceName);
 builder.Services.AddDbContext<PresaleDataDbContext>((sp, options) =>
     options.UseSqlite(sp.GetRequiredService<SqliteConnection>()));
 builder.Services.AddScoped<IPresaleLeadRepository, PresaleLeadRepository>();
-builder.Services.AddScoped<IDiscoveryReplyParserService, DiscoveryReplyParserService>();
-builder.Services.AddScoped<IDiscoveryFollowUpPolicyService, DiscoveryFollowUpPolicyService>();
-builder.Services.AddScoped<IDiscoveryFollowUpPersistenceService, DiscoveryFollowUpPersistenceService>();
-builder.Services.AddScoped<IDiscoveryStateTransitionService, DiscoveryStateTransitionService>();
 builder.Services.AddScoped<ISummaryCompositionPolicyService, SummaryCompositionPolicyService>();
 
 builder.Services.AddMcpServer()

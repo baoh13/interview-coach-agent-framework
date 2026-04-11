@@ -14,111 +14,6 @@ namespace InterviewCoach.Agent.Tests;
 public class DiscoveryPhaseIntegrationTests
 {
     [Fact]
-    public async Task Given_BatchedDiscovery_Then_FollowUpPersistence_When_ExplicitConfirmationReceived_Then_It_Should_Transition_To_ContactCollection_With_Deterministic_State()
-    {
-        // Arrange
-        await using var connection = new SqliteConnection("Data Source=:memory:");
-        await connection.OpenAsync();
-
-        var options = new DbContextOptionsBuilder<PresaleDataDbContext>()
-            .UseSqlite(connection)
-            .Options;
-
-        await using var dbContext = new PresaleDataDbContext(options);
-        await dbContext.Database.EnsureCreatedAsync();
-
-        var lead = new PresaleLead
-        {
-            Id = Guid.NewGuid(),
-            SessionId = "phase4-integration-1",
-            CurrentPhase = ConversationPhase.Discovery,
-            CurrentDiscoveryRound = 0,
-            FollowUpAskedCount = 3,
-            PendingDiscoveryItemsJson = "[\"timeline\",\"budget\"]"
-        };
-
-        dbContext.PresaleLeads.Add(lead);
-        await dbContext.SaveChangesAsync();
-
-        var repository = new PresaleLeadRepository(dbContext);
-
-        // Simulate batched initial discovery asked metadata persistence.
-        var initialTimeline = await repository.AddAskedQuestionAsync(lead.Id, new AskedQuestion
-        {
-            QuestionText = "What timeline are you targeting?",
-            Phase = "Discovery",
-            AgentName = "discovery_agent",
-            QuestionKind = DiscoveryQuestionKind.Initial,
-            RoundNumber = 0,
-            QuestionTopicKey = "timeline"
-        });
-
-        var initialBudget = await repository.AddAskedQuestionAsync(lead.Id, new AskedQuestion
-        {
-            QuestionText = "What budget range do you have?",
-            Phase = "Discovery",
-            AgentName = "discovery_agent",
-            QuestionKind = DiscoveryQuestionKind.Initial,
-            RoundNumber = 0,
-            QuestionTopicKey = "budget"
-        });
-
-        var persistenceService = new DiscoveryFollowUpPersistenceService(dbContext);
-        var transitionService = new DiscoveryStateTransitionService(repository);
-        var summaryPolicyService = new SummaryCompositionPolicyService(repository);
-
-        // Act
-        var followUpResult = await persistenceService.EvaluateAndPersistAsync(new EvaluateAndPersistFollowUpsRequest(
-            LeadId: lead.Id,
-            ProposedQuestions:
-            [
-                new ProposedFollowUpQuestion("Any timeline blockers?", "timeline", initialTimeline!.Id, true),
-                new ProposedFollowUpQuestion("Any budget constraints?", "budget", initialBudget!.Id, true)
-            ]));
-
-        var transitionResult = await transitionService.EvaluateAndApplyAsync(new EvaluateDiscoveryTransitionRequest(
-            LeadId: lead.Id,
-            RequiredDiscoveryFieldsComplete: true,
-            ExplicitConfirmationReceived: true,
-            ConfirmationPromptIssued: false,
-            PartialResponseDetected: false));
-
-        var summaryPolicyResult = await summaryPolicyService.EvaluateAsync(new EvaluateSummaryCompositionRequest(
-            LeadId: lead.Id,
-            UnknownsCompletenessThreshold: 0.85m));
-
-        var updatedLead = await repository.GetPresaleLeadAsync(lead.Id);
-        var askedQuestions = (await repository.GetAskedQuestionsAsync(lead.Id)).ToList();
-
-        // Assert
-        followUpResult.Success.ShouldBeTrue();
-        followUpResult.PersistedAskedQuestions.Count.ShouldBe(2);
-        followUpResult.LimitsReached.ShouldBeTrue();
-        followUpResult.UnknownsRequired.ShouldBeTrue();
-
-        askedQuestions.Count(x => x.QuestionKind == DiscoveryQuestionKind.Initial).ShouldBe(2);
-        askedQuestions.Count(x => x.QuestionKind == DiscoveryQuestionKind.FollowUp).ShouldBe(2);
-
-        transitionResult.Success.ShouldBeTrue();
-        transitionResult.ShouldMoveToContactCollection.ShouldBeTrue();
-        transitionResult.UsedFallback.ShouldBeFalse();
-        transitionResult.TransitionReason.ShouldBe("completed_with_confirmation");
-
-        updatedLead.ShouldNotBeNull();
-        updatedLead.CurrentPhase.ShouldBe(ConversationPhase.ContactCollection);
-        updatedLead.DiscoveryUserConfirmed.ShouldBeTrue();
-        updatedLead.CurrentDiscoveryRound.ShouldBe(1);
-        updatedLead.FollowUpAskedCount.ShouldBe(5);
-        updatedLead.DiscoveryCompletenessReason.ShouldContain("unknowns_required");
-        updatedLead.DiscoveryCompletenessReason.ShouldNotContain("confirmation_unavailable");
-
-        summaryPolicyResult.Success.ShouldBeTrue();
-        summaryPolicyResult.IncludeUnknownsSection.ShouldBeTrue();
-        summaryPolicyResult.DistilledNarrativeOnly.ShouldBeTrue();
-        summaryPolicyResult.UnknownTopics.Count.ShouldBe(2);
-    }
-
-    [Fact]
     public async Task Given_DiscoveryAdvances_To_ContactCollection_When_SummaryIsPersisted_And_ExportIsMarked_Then_It_Should_Complete_The_Summarizer_To_Email_Lifecycle_Without_ReExport()
     {
         // Arrange
@@ -150,7 +45,6 @@ public class DiscoveryPhaseIntegrationTests
         await dbContext.SaveChangesAsync();
 
         var repository = new PresaleLeadRepository(dbContext);
-        var transitionService = new DiscoveryStateTransitionService(repository);
         var summaryPolicyService = new SummaryCompositionPolicyService(repository);
         var exportTimestamp = new DateTimeOffset(2026, 3, 30, 12, 0, 0, TimeSpan.Zero);
 
@@ -165,12 +59,6 @@ public class DiscoveryPhaseIntegrationTests
         });
 
         // Act
-        var transitionResult = await transitionService.EvaluateAndApplyAsync(new EvaluateDiscoveryTransitionRequest(
-            LeadId: lead.Id,
-            RequiredDiscoveryFieldsComplete: true,
-            ExplicitConfirmationReceived: true,
-            ConfirmationPromptIssued: false,
-            PartialResponseDetected: false));
 
         var contactCollectionLead = await repository.GetPresaleLeadAsync(lead.Id);
 
@@ -211,8 +99,6 @@ public class DiscoveryPhaseIntegrationTests
         var updatedLead = await repository.GetPresaleLeadAsync(lead.Id);
 
         // Assert
-        transitionResult.Success.ShouldBeTrue();
-        transitionResult.ShouldMoveToContactCollection.ShouldBeTrue();
 
         contactCollectionLead.ShouldNotBeNull();
         contactCollectionLead.CurrentPhase.ShouldBe(ConversationPhase.ContactCollection);
