@@ -1,59 +1,42 @@
-﻿@page "/"
+﻿@page "/interview"
 @using System.ComponentModel
 @using InterviewCoach.WebUI.Services
-@inject IChatClient ChatClient
 @inject ILogger<Chat> Logger
 @inject FileUploadService FileUploadService
-@implements IDisposable
 
 <PageTitle>Chat</PageTitle>
 
-<ChatHeader OnNewChat="@ResetConversationAsync" />
+<ChatHeader OnNewChat="@HandleNewChat" />
 
-<ChatMessageList Messages="@messages" InProgressMessage="@currentResponseMessage">
+<ChatMessageList Messages="@GetMessages()" InProgressMessage="@chatShell?.CurrentResponseMessage">
     <NoMessagesContent>
         <div>I'm your friendly interview coach. To get started, enter the link or text of your resume and job
             description.</div>
+        <ChatCitation File="Example_Emergency_Survival_Kit.pdf" Quote="Sample citation" />
+        <ChatCitation File="Example_GPS_Watch.pdf" Quote="Sample citation" />
         </NoMessagesContent>
     </ChatMessageList>
 
-    <div class="chat-container">
-        <ChatInput OnSend="@AddUserMessageAsync" @ref="@chatInput" />
-    </div>
+<div class="chat-container">
+    <ChatSuggestions OnSelected="HandleSendMessage" @ref="@chatSuggestions" />
+    <ChatInput OnSend="@HandleSendMessage" @ref="@chatInput" />
+</div>
+
+<ChatShell @ref="@chatShell" OnMessageAdded="@OnMessageAdded" />
 
 @code {
-    private const string SystemPrompt = """
-        You are a professional interview coach who helps the user prepare for both behavioral and technical questions.
-        """;
-
-    private int statefulMessageCount;
-    private readonly ChatOptions chatOptions = new();
-    private readonly List<ChatMessage> messages = new();
-    private string sessionId = Guid.Empty.ToString();
-    private string? lastSessionId;
-    private ChatMessage? systemPromptMessage;
-    private ChatMessage? sessionIdMessage;
-    private CancellationTokenSource? currentResponseCancellation;
-    private ChatMessage? currentResponseMessage;
+    private ChatShell? chatShell;
     private ChatInput? chatInput;
+    private ChatSuggestions? chatSuggestions;
 
-    protected override void OnInitialized()
+    private IReadOnlyList<ChatMessage> GetMessages()
     {
-        statefulMessageCount = 0;
-        AddSessionSystemMessages();
-        chatOptions.Tools = [];
-        chatOptions.ConversationId = sessionId;
+        return chatShell?.Messages ?? [];
     }
 
-    private async Task AddUserMessageAsync(ChatMessage userMessage)
+    private async Task HandleSendMessage(ChatMessage userMessage)
     {
-        CancelAnyCurrentResponse();
-
-        if (string.Equals(lastSessionId, sessionId, StringComparison.Ordinal) == false)
-        {
-            statefulMessageCount = 0;
-            lastSessionId = sessionId;
-        }
+        chatSuggestions?.Clear();
 
         // If a file is attached, upload it and append the URL to the message
         var file = chatInput?.AttachedFile;
@@ -79,105 +62,24 @@
             }
         }
 
-        messages.Add(userMessage);
-        await chatInput!.FocusAsync();
-
-        var responseText = new TextContent("");
-        currentResponseMessage = new ChatMessage(ChatRole.Assistant, [responseText]);
-        currentResponseCancellation = new();
-
-        var outboundMessages = BuildOutboundMessages();
-        await GetStreamingResponseAsync(outboundMessages, responseText, currentResponseMessage, currentResponseCancellation.Token);
-
-        messages.Add(currentResponseMessage!);
-        statefulMessageCount = chatOptions.ConversationId is not null ? messages.Count : 0;
-        currentResponseMessage = null;
-    }
-
-    private async Task GetStreamingResponseAsync(
-        IEnumerable<ChatMessage> outboundMessages, 
-        TextContent responseText,
-        ChatMessage responseMessage, 
-        CancellationToken cancellationToken)
-    {
-        Logger.LogInformation("Getting streaming response for conversation {ConversationId}", chatOptions.ConversationId);
-
-        try
-        {
-            await foreach (var update in ChatClient.GetStreamingResponseAsync(outboundMessages, chatOptions, cancellationToken))
-            {
-                await Task.Delay(50);
-
-                messages.AddMessages(update, filter: c => c is not TextContent);
-
-                if (update.Role == ChatRole.Assistant)
-                {
-                    responseText.Text += update.Text;
-                    ChatMessageItem.NotifyChanged(responseMessage);
-                }
-
-                StateHasChanged();
-            }
-        }
-        catch (System.Text.Json.JsonException ex)
-        {
-            Logger.LogError(ex, "JSON parsing error at position {Position}. The response from the agent endpoint is not valid JSON. This usually means the endpoint is returning plain text or HTML instead of the expected streaming format.", ex.BytePositionInLine);
-            responseText.Text = "Error: The interview coach service returned an unexpected response format. Please check the agent service logs for details.";
-            ChatMessageItem.NotifyChanged(responseMessage);
-            StateHasChanged();
-        }
-    }
-
-    private void CancelAnyCurrentResponse()
-    {
-        if (currentResponseMessage is not null)
-        {
-            messages.Add(currentResponseMessage);
-        }
-
-        currentResponseCancellation?.Cancel();
-        currentResponseMessage = null;
-    }
-
-    private async Task ResetConversationAsync()
-    {
-        CancelAnyCurrentResponse();
-        messages.Clear();
-        AddSessionSystemMessages();
-        chatOptions.ConversationId = sessionId;
-        statefulMessageCount = 0;
+        await chatShell!.AddUserMessageAsync(userMessage);
         await chatInput!.FocusAsync();
     }
 
-    private void AddSessionSystemMessages()
+    private async Task HandleNewChat()
     {
-        sessionId = Guid.NewGuid().ToString();
-
-        systemPromptMessage = new(ChatRole.System, SystemPrompt);
-        sessionIdMessage = new(ChatRole.System, $"SessionId: {sessionId}");
-
-        messages.Add(systemPromptMessage);
-        messages.Add(sessionIdMessage);
-
-        Logger.LogInformation("Started new chat session with SessionId: {SessionId}", sessionId);
+        await chatShell!.ResetConversationAsync();
+        chatSuggestions?.Clear();
+        await chatInput!.FocusAsync();
     }
 
-    private IEnumerable<ChatMessage> BuildOutboundMessages()
+    private Task OnMessageAdded(ChatMessage message)
     {
-        var baseMessages = messages.Skip(statefulMessageCount);
-
-        if (systemPromptMessage is null || sessionIdMessage is null)
+        if (message.Role == ChatRole.Assistant)
         {
-            return baseMessages;
+            chatSuggestions?.Update(GetMessages());
         }
 
-        var outboundMessages = new[] { systemPromptMessage, sessionIdMessage }
-            .Concat(baseMessages.Where(m => ReferenceEquals(m, systemPromptMessage) == false 
-                                            && ReferenceEquals(m, sessionIdMessage) == false));
-
-        return outboundMessages;
+        return Task.CompletedTask;
     }
-
-    public void Dispose()
-        => currentResponseCancellation?.Cancel();
 }

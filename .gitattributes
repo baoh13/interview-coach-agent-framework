@@ -1,29 +1,6 @@
-* text=auto eol=lf
-
-*.cs text diff=csharp
-*.csproj text
-*.sln text eol=crlf
-*.targets text
-*.props text
-
-*.md text
-*.txt text
-*.json text
-*.yml text
-*.yaml text
-*.xml text
-
-*.sh text eol=lf
-*.ps1 text eol=crlf
-
-*.png binary
-*.jpg binary
-*.jpeg binary
-*.gif binary
-*.ico binary
-*.pdf binary
-# Squad: union merge for append-only team state files
 .squad/decisions.md merge=union
 .squad/agents/*/history.md merge=union
 .squad/log/** merge=union
 .squad/orchestration-log/** merge=union
+
+.github/workflows/*.lock.yml linguist-generated=true merge=ours

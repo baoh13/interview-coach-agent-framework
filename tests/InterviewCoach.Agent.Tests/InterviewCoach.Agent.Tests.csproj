@@ -9,13 +9,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="bunit" Version="1.*" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+    <PackageReference Include="NSubstitute" Version="5.*" />
+    <PackageReference Include="Shouldly" Version="4.*" />
     <PackageReference Include="xunit" Version="2.*" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.*-*" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\InterviewCoach.Agent\InterviewCoach.Agent.csproj" />
+    <ProjectReference Include="..\..\src\InterviewCoach.Mcp.InterviewData\InterviewCoach.Mcp.InterviewData.csproj" />
+    <ProjectReference Include="..\..\src\InterviewCoach.Mcp.PresaleData\InterviewCoach.Mcp.PresaleData.csproj" />
+    <ProjectReference Include="..\..\src\InterviewCoach.Shared\InterviewCoach.Shared.csproj" />
+    <ProjectReference Include="..\..\src\InterviewCoach.WebUI\InterviewCoach.WebUI.csproj" />
   </ItemGroup>
 
 </Project>

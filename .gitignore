@@ -492,3 +492,31 @@ src/InterviewCoach.AppHost/appsettings.Development.json
 .squad/sessions/
 # Squad: SubSquad activation file (local to this machine)
 .squad-workstream
+
+*\wwwroot\*
+/src/InterviewCoach.WebUI/wwwroot/app.css
+/src/InterviewCoach.WebUI/wwwroot/app.js
+
+# Hook audit log — may contain sensitive prompt fragments
+.github/hooks/blocked.log
+
+.aspire/
+.claude/
+.copilot/
+.squad/
+.githooks/
+.devcontainer/
+.playwright-mcp/ 
+.visual-explainer/
+.vscode/ 
+bundles/ 
+data/ 
+docs/ 
+issues/ 
+leads/ 
+memory/ 
+plans/ 
+reports/ 
+scripts/ 
+workflow/
+workdlow/

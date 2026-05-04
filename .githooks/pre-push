@@ -1,0 +1,37 @@
+#!/bin/bash
+exit 0
+# .githooks/pre-push
+# 
+# Validates commit messages against Conventional Commits standard before push.
+# Blocks push if any commit message is non-compliant.
+#
+# Set GIT_SKIP_VALIDATION=1 to bypass this check locally.
+
+if [ "$GIT_SKIP_VALIDATION" = "1" ]; then
+    echo "⚠️  Skipping commit validation (GIT_SKIP_VALIDATION=1)"
+    exit 0
+fi
+
+# Get the directory where this script is located
+HOOKS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Call the validation script
+bash "$HOOKS_DIR/validate-conventional-commits.sh"
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+    echo ""
+    echo "❌ Commit validation failed. Push blocked."
+    echo ""
+    echo "To fix:"
+    echo "1. Review the issues above"
+    echo "2. Run: git rebase -i origin/main (or your base branch)"
+    echo "3. Reword commits to follow Conventional Commits"
+    echo "4. Try pushing again"
+    echo ""
+    echo "Or bypass validation locally (not recommended):"
+    echo "   GIT_SKIP_VALIDATION=1 git push"
+    exit 1
+fi
+
+exit 0
