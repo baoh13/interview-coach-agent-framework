@@ -1,3 +1,0 @@
-
-* This is a multi-repo project. When making changes, determine which repository the change belongs to based on the context of the change and the repository descriptions in `repos/REPOSITORIES.md`.
-* When interacting with a repository, `cd` into the root of the repo and run commands from there or spin up a subagent. This is important so that you are able to pick up the specific repository instructions.
