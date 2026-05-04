@@ -1,0 +1,14 @@
+{
+  "last_run": "2026-05-04T15:37:00Z",
+  "last_run_id": "25328107319",
+  "comments_made": [
+    {"issue": 3, "date": "2026-05-04", "note": "Linked download transcript PR"}
+  ],
+  "open_prs": [
+    {"title": "ci: add build and test workflow", "branch": "repo-assist/eng-ci-build-test-2026-05-04"},
+    {"title": "feat(ui): add download transcript as Markdown button", "branch": "repo-assist/fix-issue-3-download-transcript", "closes": 3}
+  ],
+  "monthly_summary_issue": "2026-05 (search for [Repo Assist] Monthly Activity 2026-05)",
+  "backlog_cursor": 3,
+  "notes": "Pre-existing test failure: DiscoveryPhaseIntegrationTests contact collection lifecycle. Issues #4,#7,#8,#9 still need labels. Floating widget slices #7,#8,#9 are unstarted."
+}
