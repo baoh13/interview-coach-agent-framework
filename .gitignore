@@ -499,3 +499,23 @@ src/InterviewCoach.AppHost/appsettings.Development.json
 
 # Hook audit log — may contain sensitive prompt fragments
 .github/hooks/blocked.log
+
+.aspire/
+.claude/
+.copilot/
+.squad/
+.githooks 
+.devcontainer 
+.playwright-mcp 
+.visual-explainer 
+.vscode 
+bundles 
+data 
+docs 
+issues 
+leads 
+memory 
+plans 
+report 
+script 
+workflow
