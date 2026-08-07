@@ -3,10 +3,11 @@
 @using InterviewCoach.WebUI.Services
 @inject ILogger<Chat> Logger
 @inject FileUploadService FileUploadService
+@inject IJSRuntime JS
 
 <PageTitle>Chat</PageTitle>
 
-<ChatHeader OnNewChat="@HandleNewChat" />
+<ChatHeader OnNewChat="@HandleNewChat" OnDownloadTranscript="@HandleDownloadTranscript" IsEmpty="@(!GetMessages().Any(m => m.Role == ChatRole.User || m.Role == ChatRole.Assistant))" />
 
 <ChatMessageList Messages="@GetMessages()" InProgressMessage="@chatShell?.CurrentResponseMessage">
     <NoMessagesContent>
@@ -71,6 +72,28 @@
         await chatShell!.ResetConversationAsync();
         chatSuggestions?.Clear();
         await chatInput!.FocusAsync();
+    }
+
+    private async Task HandleDownloadTranscript()
+    {
+        var messages = GetMessages();
+        var sb = new System.Text.StringBuilder();
+        var date = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        sb.AppendLine($"# Interview Transcript — {date}");
+        sb.AppendLine();
+        foreach (var message in messages)
+        {
+            if (message.Role == ChatRole.User)
+            {
+                sb.AppendLine($"**User:** {message.Text}");
+            }
+            else if (message.Role == ChatRole.Assistant)
+            {
+                sb.AppendLine($"**Coach:** {message.Text}");
+            }
+            sb.AppendLine();
+        }
+        await JS.InvokeVoidAsync("downloadTextFile", $"interview-{date}.md", sb.ToString());
     }
 
     private Task OnMessageAdded(ChatMessage message)
